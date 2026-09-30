@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import type { User } from '@supabase/supabase-js';
 import { ArrowRight, BellRing, Camera, Globe2, MessageCircle, Mic, ShieldCheck, SlidersHorizontal, Sparkles, UserRound, Wifi, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -35,15 +35,15 @@ export function MatchStage({ user, profile, prefs, autoStart, onAutoStarted, onS
 
   // Adopt a search that was started earlier (this visit or after a reload).
   useEffect(() => { void searchStore.resume(profile.id); }, [profile.id]);
+  const searching = useSyncExternalStore(searchStore.subscribe, () => searchStore.searching);
+  const waited = useSyncExternalStore(searchStore.subscribe, () => searchStore.waited);
 
   // Keep the wait counter ticking while a search is live.
   useEffect(() => {
-    if (!searchStore.searching) return;
+    if (!searching) return;
     const t = setInterval(() => tick(x => x + 1), 1000);
     return () => clearInterval(t);
-  });
-  const searching = searchStore.searching;
-  const waited = searchStore.waited;
+  }, [searching]);
 
   async function requestMedia() {
     if (mode === 'text') return true;
