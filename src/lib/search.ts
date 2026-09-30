@@ -1,7 +1,8 @@
 import { supabase } from '@/integrations/supabase/client';
+import type { Json } from '@/integrations/supabase/types';
 import type { Session } from './jnoy';
 
-export type SearchRequest = { mode: string; snapshot: Record<string, unknown> };
+export type SearchRequest = { mode: string; snapshot: Json };
 
 type State = { searching: boolean; began: number; matched: Session | null; error: string | null };
 
@@ -13,6 +14,7 @@ let runId = 0;
 
 const emit = () => listeners.forEach(l => l());
 const clearTimer = () => { if (timer) { clearTimeout(timer); timer = null; } };
+const queue = (mode: string, snapshot: Json) => void (async () => { await supabase.rpc('join_match_queue', { _mode: mode, _snapshot: snapshot }); })().catch(() => {});
 
 async function pollOnce() {
   const id = runId;
@@ -24,7 +26,7 @@ async function pollOnce() {
     const { data: s } = await supabase.from('conversation_sessions').select('*').eq('id', r.session_id).maybeSingle();
     if (s) { state.searching = false; state.matched = s; clearTimer(); emit(); return; }
   }
-  if (r?.status === 'idle' && request) void supabase.rpc('join_match_queue', { _mode: request.mode, _snapshot: request.snapshot }).catch(() => {});
+  if (r?.status === 'idle' && request) queue(request.mode, request.snapshot);
   timer = setTimeout(() => { void pollOnce(); }, 1500);
 }
 
@@ -47,7 +49,7 @@ export const searchStore = {
     state.began = Date.now();
     request = req;
     emit();
-    void supabase.rpc('join_match_queue', { _mode: req.mode, _snapshot: req.snapshot }).catch(() => {});
+    queue(req.mode, req.snapshot);
     void pollOnce();
   },
   stop() {
@@ -56,7 +58,7 @@ export const searchStore = {
     request = null;
     clearTimer();
     emit();
-    void supabase.rpc('leave_match_queue').catch(() => {});
+    void (async () => { await supabase.rpc('leave_match_queue'); })().catch(() => {});
   },
   // Adopt a queue row that is still waiting (e.g. after a page reload) so the
   // same search continues instead of silently vanishing.
@@ -68,7 +70,7 @@ export const searchStore = {
       .gt('expires_at', new Date().toISOString())
       .maybeSingle();
     if (!row || state.searching) return;
-    const pref = (row.preference_snapshot || {}) as Record<string, unknown>;
+    const pref = (row.preference_snapshot || {}) as Json;
     request = { mode: row.desired_mode || 'video', snapshot: pref };
     state.error = null;
     state.searching = true;
