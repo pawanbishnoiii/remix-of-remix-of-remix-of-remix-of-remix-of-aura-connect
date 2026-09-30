@@ -40,6 +40,7 @@ function Home() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [prefs, setPrefs] = useState<Prefs | null>(null);
   const [detectedCountry, setDetectedCountry] = useState<string | null>(null);
+  const [skipOnboarding, setSkipOnboarding] = useState(false);
   const [section, setSection] = useState<Section>('discover');
   const [authOpen, setAuthOpen] = useState(false);
   const [active, setActive] = useState<Session | null>(null);
@@ -97,7 +98,10 @@ function Home() {
 
   const go = (s: Section) => { if (!user) { setAuthOpen(true); return; } setSection(s); };
   const startFromAnywhere = () => { setSection('discover'); };
-  const needsOnboarding = !!user && loaded && !profile?.onboarding_completed;
+  useEffect(() => { try { setSkipOnboarding(sessionStorage.getItem('jnoy_onb_skip') === '1'); } catch { /* ignore */ } }, [user?.id]);
+  const needsOnboarding = !!user && loaded && !profile?.onboarding_completed && !skipOnboarding;
+  useEffect(() => { if (needsOnboarding) void supabase.rpc('mark_onboarding_seen'); }, [needsOnboarding]);
+  const skip = () => { try { sessionStorage.setItem('jnoy_onb_skip', '1'); } catch { /* ignore */ } setSkipOnboarding(true); setSection('discover'); };
   const inCall = !!(active && user);
 
   return <div className={`app-shell ${user ? 'jn-member' : ''}`}>
@@ -120,11 +124,11 @@ function Home() {
     <main>
       {!ready || (user && !loaded) ? <div className="jn-loading"><div className="search-rings"><span/><span/><span/></div><p>Finding your place in the world…</p></div>
         : !user ? <><Hero onStart={() => setAuthOpen(true)}/><GuestPreview onStart={() => setAuthOpen(true)}/><HowItWorks/><BottomCta onStart={() => setAuthOpen(true)}/></>
-        : needsOnboarding ? <Onboarding user={user} profile={profile} prefs={prefs} detectedCountry={detectedCountry} notify={notify} onDone={async () => { await refresh(); setSection('discover'); }}/>
+        : needsOnboarding ? <Onboarding user={user} profile={profile} prefs={prefs} detectedCountry={detectedCountry ?? profile?.detected_country ?? null} notify={notify} onSkip={skip} onDone={async () => { await refresh(); setSection('discover'); }}/>
         : inCall ? <CallRoom key={active!.id} session={active!} user={user} notify={notify} onClose={() => { setAutoStart(false); setActive(null); setSection('discover'); }} onNext={() => { setActive(null); setSection('discover'); setAutoStart(true); }}/>
         : section === 'messages' ? <Messages user={user} notify={notify}/>
-        : section === 'profile' ? <ProfilePage user={user} profile={profile} prefs={prefs} detectedCountry={detectedCountry} refresh={refresh} notify={notify} onStart={startFromAnywhere}/>
-        : profile ? <MatchStage user={user} profile={profile} prefs={prefs} autoStart={autoStart} onAutoStarted={() => setAutoStart(false)} onSession={setActive} notify={notify}/> : null}
+        : section === 'profile' ? <ProfilePage user={user} profile={profile} prefs={prefs} detectedCountry={detectedCountry ?? profile?.detected_country ?? null} refresh={refresh} notify={notify} onStart={startFromAnywhere}/>
+        : profile ? <MatchStage user={user} profile={profile} prefs={prefs} autoStart={autoStart} onAutoStarted={() => setAutoStart(false)} onSession={setActive} notify={notify} onNeedProfile={() => setSection('profile')} refresh={refresh}/> : null}
     </main>
 
     {!user && ready && <SiteFooter/>}
