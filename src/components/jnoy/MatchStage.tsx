@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import type { User } from '@supabase/supabase-js';
-import { ArrowRight, Camera, Globe2, MessageCircle, Mic, ShieldCheck, SlidersHorizontal, Sparkles, UserRound, Wifi, X } from 'lucide-react';
+import { ArrowRight, BellRing, Camera, Globe2, MessageCircle, Mic, ShieldCheck, SlidersHorizontal, Sparkles, UserRound, Wifi, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { VideoStage } from './VideoStage';
 import { CountryPicker } from './CountryPicker';
 import { Brand } from './Brand';
 import { LANGUAGES, countryFlag, countryLabel, type Mode, type Prefs, type Profile, type Session } from '@/lib/jnoy';
+import { searchStore } from '@/lib/search';
 import { isMobileDevice } from '@/lib/device';
 import clayCamera from '@/assets/clay-camera.webp';
 import clayChat from '@/assets/clay-chat.webp';
@@ -15,8 +16,6 @@ type CamState = 'idle' | 'requesting' | 'denied' | 'ready';
 
 export function MatchStage({ user, profile, prefs, autoStart, onAutoStarted, onSession, notify, onNeedProfile, onMessages, refresh }: { user: User; profile: Profile; prefs: Prefs | null; autoStart: boolean; onAutoStarted: () => void; onSession: (s: Session) => void; notify: (s: string) => void; onNeedProfile: () => void; onMessages: () => void; refresh: () => Promise<void> }) {
   const [mode, setMode] = useState<Mode>((prefs?.default_mode as Mode) || 'video');
-  const [searching, setSearching] = useState(false);
-  const [waited, setWaited] = useState(0);
   const [cam, setCam] = useState<CamState>('idle');
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -24,14 +23,27 @@ export function MatchStage({ user, profile, prefs, autoStart, onAutoStarted, onS
   const [language, setLanguage] = useState(prefs?.languages?.[0] || 'English');
   const [similar, setSimilar] = useState(prefs?.similar_interests ?? true);
   const [broaden, setBroaden] = useState(prefs?.broaden_after_wait ?? true);
-  const searchRef = useRef(false);
+  const [autoNext, setAutoNext] = useState(prefs?.auto_next ?? true);
+  const [, tick] = useState(0);
   const streamRef = useRef<MediaStream | null>(null);
   void user;
 
   useEffect(() => { streamRef.current = stream; }, [stream]);
-  useEffect(() => () => { searchRef.current = false; streamRef.current?.getTracks().forEach(t => t.stop()); }, []);
+  useEffect(() => () => { streamRef.current?.getTracks().forEach(t => t.stop()); }, []);
   // Never request media on load. Only release media when switching to text.
   useEffect(() => { if (mode === 'text') { streamRef.current?.getTracks().forEach(t => t.stop()); setStream(null); setCam('idle'); } }, [mode]);
+
+  // Adopt a search that was started earlier (this visit or after a reload).
+  useEffect(() => { void searchStore.resume(profile.id); }, [profile.id]);
+
+  // Keep the wait counter ticking while a search is live.
+  useEffect(() => {
+    if (!searchStore.searching) return;
+    const t = setInterval(() => tick(x => x + 1), 1000);
+    return () => clearInterval(t);
+  });
+  const searching = searchStore.searching;
+  const waited = searchStore.waited;
 
   async function requestMedia() {
     if (mode === 'text') return true;
@@ -45,36 +57,18 @@ export function MatchStage({ user, profile, prefs, autoStart, onAutoStarted, onS
   }
 
   const savePrefs = async () => {
-    const { error } = await supabase.from('user_preferences').update({ preferred_countries: countries, languages: [language], similar_interests: similar, broaden_after_wait: broaden, default_mode: mode }).eq('user_id', profile.id);
+    const { error } = await supabase.from('user_preferences').update({ preferred_countries: countries, languages: [language], similar_interests: similar, broaden_after_wait: broaden, auto_next: autoNext, default_mode: mode }).eq('user_id', profile.id);
     if (error) notify(error.message); else { notify('Match filters saved.'); setFiltersOpen(false); void refresh(); }
   };
 
-  const stop = async () => { searchRef.current = false; setSearching(false); setWaited(0); await supabase.rpc('leave_match_queue'); };
+  const stop = () => { searchStore.stop(); };
 
   const start = async () => {
-    if (searchRef.current) return;
+    if (searchStore.searching) return;
     if (!profile.onboarding_completed) { notify('Finish your profile first — it takes a few seconds.'); onNeedProfile(); return; }
     if (mode !== 'text' && cam !== 'ready' && !(await requestMedia())) { notify(mode === 'video' ? 'Allow camera and microphone to start a video chat, or pick Text.' : 'Allow microphone to start a voice chat, or pick Text.'); return; }
     const snapshot = { interests: similar ? profile.tags || [] : [], languages: [language], countries, strict: !broaden, device: isMobileDevice() ? 'mobile' : 'desktop' };
-    const { error } = await supabase.rpc('join_match_queue', { _mode: mode, _snapshot: snapshot });
-    if (error) { notify(error.message); return; }
-    searchRef.current = true; setSearching(true); setWaited(0);
-    const began = Date.now();
-    const poll = async () => {
-      if (!searchRef.current) return;
-      setWaited(Math.round((Date.now() - began) / 1000));
-      const { data, error: e } = await supabase.rpc('find_or_create_match');
-      if (!searchRef.current) return;
-      if (e) { notify(e.message); void stop(); return; }
-      const r = data as { status?: string; session_id?: string } | null;
-      if (r?.status === 'matched' && r.session_id) {
-        const { data: s } = await supabase.from('conversation_sessions').select('*').eq('id', r.session_id).single();
-        if (s && searchRef.current) { searchRef.current = false; setSearching(false); streamRef.current?.getTracks().forEach(t => t.stop()); setStream(null); onSession(s); return; }
-      }
-      if (r?.status === 'idle') await supabase.rpc('join_match_queue', { _mode: mode, _snapshot: snapshot });
-      setTimeout(poll, 1500);
-    };
-    void poll();
+    searchStore.start({ mode, snapshot });
   };
   useEffect(() => { if (autoStart) { onAutoStarted(); void start(); } }, [autoStart]);
 
@@ -103,8 +97,8 @@ export function MatchStage({ user, profile, prefs, autoStart, onAutoStarted, onS
             <button key={m} role="radio" aria-checked={mode === m} disabled={searching} className={mode === m ? 'active' : ''} onClick={() => setMode(m)}><Icon size={18}/> {l}</button>)}
         </div>
         <div className="jn-start-row">
-          <button className="jn-filter-btn" onClick={() => setFiltersOpen(true)} disabled={searching} aria-label="Match filters"><SlidersHorizontal size={18}/>{countries.length > 0 && <b>{countries.length}</b>}</button>
-          <button className={`start-button jn-start ${searching ? 'jn-cancel' : ''}`} onClick={searching ? () => void stop() : () => void start()}>
+          <button className="jn-filter-btn" onClick={() => setFiltersOpen(true)} aria-label="Match filters"><SlidersHorizontal size={18}/>{countries.length > 0 && <b>{countries.length}</b>}</button>
+          <button className={`start-button jn-start ${searching ? 'jn-cancel' : ''}`} onClick={searching ? stop : () => void start()}>
             {searching ? <><span className="spinner"/> Cancel search <X size={19}/></> : <>Start matching <ArrowRight size={20}/></>}
           </button>
         </div>
@@ -114,6 +108,7 @@ export function MatchStage({ user, profile, prefs, autoStart, onAutoStarted, onS
     <aside className="jn-chat-panel">
        <div className="chat-title"><button className="jn-messages-link" onClick={onMessages} title="Open messages"><MessageCircle size={19}/><span>Messages</span><ArrowRight size={15}/></button><span>{searching ? 'SEARCHING' : 'WAITING'}</span></div>
       <div className="chat-messages"><div className="chat-welcome"><Sparkles size={24}/><h4>Chat opens when you connect.</h4><p>Each match starts a fresh, private chat. Never share phone numbers or social handles.</p></div>
+        {searching && <div className="jn-mini-wait"><span className="live-dot"/> Searching in the background — {waited}s. You can open Messages or Profile; we keep looking.</div>}
         <ul className="jn-tips"><li><ShieldCheck size={15}/> Report instantly if anything feels wrong</li><li><Wifi size={15}/> Video adjusts to slow internet</li><li><Globe2 size={15}/> Nearby first, then the whole world</li></ul>
       </div>
     </aside>
@@ -121,18 +116,29 @@ export function MatchStage({ user, profile, prefs, autoStart, onAutoStarted, onS
       <div className="auth-modal jn-filters" role="dialog" aria-modal="true" aria-label="Match filters" onClick={e => e.stopPropagation()}>
         <button className="modal-close" onClick={() => setFiltersOpen(false)} aria-label="Close"><X size={20}/></button>
         <h2>Who to meet</h2><p>Matching stays random — these just set priorities.</p>
-        <h3 className="jn-sub">Countries</h3>
-        <CountryPicker value={countries} onChange={setCountries}/>
-        {profile.detected_country && <small className="jn-muted"><Globe2 size={12}/> Network suggestion (approximate): {countryFlag(profile.detected_country)} {countryLabel(profile.detected_country)} — not saved unless you pick it.</small>}
-        <h3 className="jn-sub">If nobody is available</h3>
-        <div className="jn-seg jn-seg-wide">
-          <button type="button" className={broaden ? 'on' : ''} onClick={() => setBroaden(true)}>Widen after a short wait</button>
-          <button type="button" className={!broaden ? 'on' : ''} onClick={() => setBroaden(false)}>Only my picks (strict)</button>
-        </div>
-        <div className="two-col">
-          <label>Language<select value={language} onChange={e => setLanguage(e.target.value)}>{LANGUAGES.map(l => <option key={l}>{l}</option>)}</select></label>
-          <label>Interests<div className="jn-seg"><button type="button" className={similar ? 'on' : ''} onClick={() => setSimilar(true)}>Similar first</button><button type="button" className={!similar ? 'on' : ''} onClick={() => setSimilar(false)}>Any</button></div></label>
-        </div>
+        <section className="jn-filter-sec">
+          <h3 className="jn-sub"><Globe2 size={14}/> Countries</h3>
+          <CountryPicker value={countries} onChange={setCountries}/>
+          {profile.detected_country && <small className="jn-muted"><Globe2 size={12}/> Network suggestion (approximate): {countryFlag(profile.detected_country)} {countryLabel(profile.detected_country)} — not saved unless you pick it.</small>}
+          <div className="jn-switch-row">
+            <div><h4>Widen when nobody is online</h4><p>After a short wait, meet people from anywhere. Off keeps you strictly to your picks.</p></div>
+            <button type="button" role="switch" aria-checked={broaden} aria-label="Widen when nobody is online" className={`jn-switch ${broaden ? 'on' : ''}`} onClick={() => setBroaden(!broaden)}><span/></button>
+          </div>
+        </section>
+        <section className="jn-filter-sec">
+          <h3 className="jn-sub"><Sparkles size={14}/> How you talk</h3>
+          <div className="two-col">
+            <label>Language<select value={language} onChange={e => setLanguage(e.target.value)}>{LANGUAGES.map(l => <option key={l}>{l}</option>)}</select></label>
+            <label>Interests<div className="jn-seg"><button type="button" className={similar ? 'on' : ''} onClick={() => setSimilar(true)}>Similar first</button><button type="button" className={!similar ? 'on' : ''} onClick={() => setSimilar(false)}>Any</button></div></label>
+          </div>
+        </section>
+        <section className="jn-filter-sec jn-filter-auto">
+          <h3 className="jn-sub"><BellRing size={14}/> Next match</h3>
+          <div className="jn-switch-row">
+            <div><h4>Keep matching automatically</h4><p>When your partner taps Next or leaves, we immediately look for the next person for you.</p></div>
+            <button type="button" role="switch" aria-checked={autoNext} aria-label="Keep matching automatically" className={`jn-switch ${autoNext ? 'on' : ''}`} onClick={() => setAutoNext(!autoNext)}><span/></button>
+          </div>
+        </section>
         <button className="full-primary" onClick={() => void savePrefs()}>Save filters <ArrowRight size={17}/></button>
       </div>
     </div>}
