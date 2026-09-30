@@ -11,6 +11,6 @@ export function Hero({ onStart }: { onStart: () => void }) {
       <button className="jn-hero-cta" onClick={onStart}>Continue with Google <ArrowUpRight size={18}/></button>
       <div className="hero-proof"><span className="proof-bubbles"><b>🌍</b><b>✳</b><b>💜</b></span><span>18+ only · Free · No searching strangers</span></div>
     </motion.div>
-    <div className="hero-art"><img src={world} alt="Clay lavender globe with a coral heart and mint star in orbit" width={640} height={640} fetchPriority="high"/><div className="jn-float jn-float-a">👋 Hi from 🇮🇳</div><div className="jn-float jn-float-b">🎧 Voice · 🇧🇷</div><div className="jn-float jn-float-c">💬 New match!</div><div className="art-sticker sticker-top">✳ &nbsp; a whole world of hellos</div><div className="art-sticker sticker-bottom"><span className="live-dot"/> Connections happen here</div></div>
+    <div className="hero-art"><img src={world} alt="Clay lavender globe with a coral heart and mint star in orbit" width={640} height={640} fetchPriority="high"/><div className="jn-float jn-float-a">👋 Hi from 🇮🇳</div><div className="jn-float jn-float-b">🎧 Voice · 🇧🇷</div><div className="art-sticker sticker-top">✳ &nbsp; a whole world of hellos</div><div className="art-sticker sticker-bottom"><span className="live-dot"/> Connections happen here</div></div>
   </div></section>;
 }
