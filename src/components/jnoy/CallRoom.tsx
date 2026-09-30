@@ -37,6 +37,10 @@ export function CallRoom({ session, user, onClose, onNext, notify }: { session: 
   const [reporting, setReporting] = useState(false);
   const [pendingShot, setPendingShot] = useState<Blob | null>(null);
   const [chatOpen, setChatOpen] = useState(session.mode === 'text');
+  const [peerTyping, setPeerTyping] = useState(false);
+  const typingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const typingSentAt = useRef(0);
+  const roomChannel = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const signalCursor = useRef({ at: '', id: '' });
   const chatEnd = useRef<HTMLDivElement>(null);
   const leaving = useRef(false);
@@ -46,13 +50,24 @@ export function CallRoom({ session, user, onClose, onNext, notify }: { session: 
   useEffect(() => {
     let alive = true; let pc: RTCPeerConnection | null = null; let stream: MediaStream | null = null;
     supabase.from('profiles').select('id,display_name,country_code,avatar_url,tags').eq('id', peerId).single().then(({ data }) => { if (alive) setPartner(data); });
-    const load = () => supabase.from('session_messages').select('*').eq('session_id', session.id).order('created_at', { ascending: true }).limit(200).then(({ data }) => { if (alive) setMessages(data || []); });
+    const load = () => supabase.from('session_messages').select('*').eq('session_id', session.id).order('created_at', { ascending: true }).limit(500).then(({ data, error }) => { if (alive && !error) setMessages(data || []); });
     void load();
     const channel = supabase.channel(`room-${session.id}`)
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'session_messages', filter: `session_id=eq.${session.id}` }, p => { if (alive) setMessages(m => m.some(x => x.id === (p.new as Msg).id) ? m : [...m, p.new as Msg]); setChatOpen(true); })
+      .on('broadcast', { event: 'typing' }, ({ payload }) => {
+        if (payload.userId !== user.id && payload.userId === peerId && alive) {
+          setPeerTyping(true);
+          if (typingTimer.current) clearTimeout(typingTimer.current);
+          typingTimer.current = setTimeout(() => setPeerTyping(false), 2200);
+        }
+      })
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'session_messages', filter: `session_id=eq.${session.id}` }, p => { if (alive) setMessages(m => m.some(x => x.id === (p.new as Msg).id) ? m : [...m, p.new as Msg].sort((a,b) => a.created_at.localeCompare(b.created_at))); setChatOpen(true); })
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'conversation_sessions', filter: `id=eq.${session.id}` }, p => {
         if (['ended', 'failed', 'reported'].includes((p.new as Session).status) && !leaving.current) { setCallState('disconnected'); notify('They left. Finding someone new…'); setTimeout(onNext, 1400); }
-      }).subscribe();
+      }).subscribe(status => { if (status === 'SUBSCRIBED') void load(); });
+    roomChannel.current = channel;
+    const chatTimer = setInterval(() => { if (document.visibilityState === 'visible') void load(); }, 3000);
+    const onVisible = () => { if (document.visibilityState === 'visible') void load(); };
+    document.addEventListener('visibilitychange', onVisible);
     let timer: ReturnType<typeof setInterval> | undefined; let qualityTimer: ReturnType<typeof setInterval> | undefined; let connTimer: ReturnType<typeof setTimeout> | undefined;
     const pendingIce: RTCIceCandidateInit[] = []; let busy = false;
     async function checkSignals() {
@@ -107,7 +122,7 @@ export function CallRoom({ session, user, onClose, onNext, notify }: { session: 
       } catch { setCallState('disconnected'); notify('Camera or microphone permission is needed. Allow it in your browser, or use text chat.'); }
     }
     void init();
-    return () => { alive = false; clearInterval(timer); clearInterval(qualityTimer); clearTimeout(connTimer); supabase.removeChannel(channel); pc?.close(); stream?.getTracks().forEach(t => t.stop()); };
+    return () => { alive = false; clearInterval(timer); clearInterval(chatTimer); clearInterval(qualityTimer); clearTimeout(connTimer); if (typingTimer.current) clearTimeout(typingTimer.current); roomChannel.current = null; document.removeEventListener('visibilitychange', onVisible); supabase.removeChannel(channel); pc?.close(); stream?.getTracks().forEach(t => t.stop()); };
   }, [session.id]);
 
   useEffect(() => { chatEnd.current?.scrollIntoView({ behavior: 'smooth', block: 'end' }); }, [messages.length]);
@@ -121,6 +136,13 @@ export function CallRoom({ session, user, onClose, onNext, notify }: { session: 
     const { data, error } = await supabase.from('session_messages').insert({ session_id: session.id, sender_id: user.id, body: parsed.data }).select('*').single();
     if (error) { notify(error.message); setDraft(parsed.data); } else if (data) setMessages(m => m.some(x => x.id === data.id) ? m : [...m, data]);
   };
+  const updateDraft = (value: string) => {
+    setDraft(value);
+    if (value.trim() && Date.now() - typingSentAt.current > 1200) {
+      typingSentAt.current = Date.now();
+      void roomChannel.current?.send({ type: 'broadcast', event: 'typing', payload: { userId: user.id } });
+    }
+  };
   const openReport = async () => { setPendingShot(session.mode === 'video' ? await captureFrame() : null); setReporting(true); };
   const submitReport = async (category: string, note: string) => {
     let path: string | null = null;
@@ -132,12 +154,12 @@ export function CallRoom({ session, user, onClose, onNext, notify }: { session: 
     leaving.current = true;
     const { error } = await supabase.rpc('submit_report_v2', { _reported: peerId, _session: session.id, _category: category, _note: note, _screenshot: path as string });
     if (error) { leaving.current = false; notify(error.message); return; }
-    setReporting(false); notify('Reported and blocked. Thank you for keeping Jnoy safe.'); onNext();
+    setReporting(false); notify('Reported and blocked. Your chat history is available below.'); setChatOpen(true); setCallState('disconnected');
   };
   const saveConnection = async () => {
     const { data, error } = await supabase.rpc('set_mutual_connection_decision', { _session: session.id, _accept: true });
     if (error) notify(error.message);
-    else if (data === 'active' || data === 'pending') { setSaved(data); notify(data === 'active' ? 'You both connected! Find them in Messages.' : 'Saved! They’ll appear in Messages if they connect too.'); }
+    else if (data === 'active' || data === 'pending') { setSaved(data); notify(data === 'active' ? 'You both connected!' : 'Connection request saved.'); }
     else notify('This connection is no longer available.');
   };
   const toggleMic = () => { local?.getAudioTracks().forEach(t => { t.enabled = !micOn; }); setMicOn(!micOn); };
@@ -167,10 +189,11 @@ export function CallRoom({ session, user, onClose, onNext, notify }: { session: 
         <div className="chat-title"><div><MessageCircle size={19}/><h3>Chat with {name}</h3></div><span>LIVE</span></div>
         <div className="chat-messages">
           <div className="chat-welcome"><Sparkles size={24}/><h4>It starts with hello.</h4><p>This chat is cleared when you tap Next. Never share contact details.</p></div>
-          {messages.map(m => <div key={m.id} className={`bubble ${m.sender_id === user.id ? 'mine' : ''}`}><small>{m.sender_id === user.id ? 'You' : name}</small>{m.body}</div>)}
+           {messages.map(m => <div key={m.id} className={`bubble ${m.sender_id === user.id ? 'mine' : ''}`}><small>{m.sender_id === user.id ? 'You' : name}</small>{m.body}</div>)}
+           {peerTyping && !reporting && <div className="jn-typing" role="status">{name} is typing…</div>}
           <div ref={chatEnd}/>
         </div>
-        <form className="chat-form" onSubmit={send}><input value={draft} onChange={e => setDraft(e.target.value)} placeholder="Say something nice…" maxLength={2000} aria-label="Message" autoComplete="off"/><button aria-label="Send message" disabled={!draft.trim()}><Send size={18}/></button></form>
+         <form className="chat-form" onSubmit={send}><input value={draft} onChange={e => updateDraft(e.target.value)} placeholder="Say something nice…" maxLength={2000} aria-label="Message" autoComplete="off" disabled={callState === 'disconnected'}/><button aria-label="Send message" disabled={!draft.trim() || callState === 'disconnected'}><Send size={18}/></button></form>
       </div>
     </div>
     {reporting && <ReportDialog hasVideo={!!pendingShot} onCancel={() => setReporting(false)} onSubmit={submitReport}/>}

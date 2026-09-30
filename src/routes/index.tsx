@@ -109,7 +109,6 @@ function Home() {
       <Brand light/>
       {user && !needsOnboarding && <nav className="header-links">
         <button onClick={() => go('discover')} className={section === 'discover' ? 'selected' : ''}>Discover</button>
-        <button onClick={() => go('messages')} className={section === 'messages' ? 'selected' : ''}>Messages</button>
         <button onClick={() => go('profile')} className={section === 'profile' ? 'selected' : ''}>Profile</button>
         {isAdmin && <Link to="/admin" className="jn-admin-link"><Shield size={14}/> Admin</Link>}
       </nav>}
@@ -132,11 +131,6 @@ function Home() {
     </main>
 
     {!user && ready && <SiteFooter/>}
-    {user && !inCall && !needsOnboarding && loaded && <nav className="mobile-nav">
-      <button className={section === 'discover' ? 'active' : ''} onClick={() => go('discover')}><Compass size={22}/>Discover</button>
-      <button className={section === 'messages' ? 'active' : ''} onClick={() => go('messages')}><MessageCircle size={22}/>Messages</button>
-      <button className={section === 'profile' ? 'active' : ''} onClick={() => go('profile')}><span className="nav-avatar">{profile?.display_name?.[0] || 'J'}</span>Profile</button>
-    </nav>}
     {!user && ready && <button className="mobile-match-cta" onClick={() => setAuthOpen(true)}>Continue with Google</button>}
     <AnimatePresence>{authOpen && <AuthModal onClose={() => setAuthOpen(false)} notify={notify}/>}</AnimatePresence>
     {toast && <div className="toast" role="status">{toast}<button onClick={() => setToast('')} aria-label="Dismiss"><X size={15}/></button></div>}
