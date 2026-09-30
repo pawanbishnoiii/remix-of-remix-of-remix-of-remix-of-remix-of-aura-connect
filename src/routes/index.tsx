@@ -149,6 +149,8 @@ function CallRoom({ session, user, onClose, onNext, notify }: { session: Session
     const channel = supabase.channel(`room-${session.id}`).on('postgres_changes', {event:'INSERT', schema:'public',table:'session_messages',filter:`session_id=eq.${session.id}`}, () => void load()).on('postgres_changes', {event:'UPDATE',schema:'public',table:'conversation_sessions',filter:`id=eq.${session.id}`}, p => { if ((p.new as Session).status === 'ended') { setCallState('disconnected'); setTimeout(onClose,1800); } }).subscribe();
     let timer: ReturnType<typeof setInterval> | undefined;
     let connectionTimer: ReturnType<typeof setTimeout> | undefined;
+    let qualityTimer: ReturnType<typeof setInterval> | undefined;
+    const pendingIce: RTCIceCandidateInit[] = [];
     let signalBusy = false;
     async function checkSignals() {
       if (signalBusy) return;
@@ -160,9 +162,9 @@ function CallRoom({ session, user, onClose, onNext, notify }: { session: Session
         signalId.current = row.created_at; signalLastId.current = row.id; const msg = row.payload as { type?: string; sdp?: RTCSessionDescriptionInit; candidate?: RTCIceCandidateInit };
         if (!pc) continue;
         try {
-          if (msg.type === 'offer' && msg.sdp) { await pc.setRemoteDescription(msg.sdp); const answer = await pc.createAnswer(); await pc.setLocalDescription(answer); await sendSignal({type:'answer',sdp:answer as unknown as Json}); }
-          if (msg.type === 'answer' && msg.sdp && pc.signalingState === 'have-local-offer') await pc.setRemoteDescription(msg.sdp);
-          if (msg.type === 'ice' && msg.candidate) await pc.addIceCandidate(msg.candidate);
+           if (msg.type === 'offer' && msg.sdp) { await pc.setRemoteDescription(msg.sdp); for (const ice of pendingIce.splice(0)) await pc.addIceCandidate(ice); const answer = await pc.createAnswer(); await pc.setLocalDescription(answer); await sendSignal({type:'answer',sdp:answer as unknown as Json}); }
+           if (msg.type === 'answer' && msg.sdp && pc.signalingState === 'have-local-offer') { await pc.setRemoteDescription(msg.sdp); for (const ice of pendingIce.splice(0)) await pc.addIceCandidate(ice); }
+           if (msg.type === 'ice' && msg.candidate) { if (pc.remoteDescription) await pc.addIceCandidate(msg.candidate); else pendingIce.push(msg.candidate); }
         } catch (e) { console.warn('Connection negotiation failed', e); }
       }
       } finally { signalBusy = false; }
@@ -176,19 +178,31 @@ function CallRoom({ session, user, onClose, onNext, notify }: { session: Session
         pc.ontrack = e => { setRemote(e.streams[0] ?? null); setConnected(true); setCallState('connected'); };
         pc.onicecandidate = e => { if (e.candidate) void sendSignal({type:'ice',candidate:e.candidate.toJSON() as Json}); };
         pc.onconnectionstatechange = () => { if (pc?.connectionState === 'disconnected' || pc?.connectionState === 'failed') setCallState('disconnected'); if (pc?.connectionState === 'connected') {setCallState('connected');setConnected(true);} };
+        if (session.mode === 'video') qualityTimer = setInterval(async () => {
+          if (!pc || pc.connectionState !== 'connected') return;
+          const stats = await pc.getStats();
+          let bitrate = 700_000;
+          stats.forEach(report => { if (report.type === 'candidate-pair' && report.state === 'succeeded' && report.availableOutgoingBitrate) bitrate = Math.max(120_000, Math.min(850_000, report.availableOutgoingBitrate * .65)); });
+          const sender = pc.getSenders().find(s => s.track?.kind === 'video');
+          if (!sender) return;
+          const parameters = sender.getParameters();
+          if (!parameters.encodings?.length) parameters.encodings = [{}];
+          parameters.encodings[0].maxBitrate = bitrate;
+          try { await sender.setParameters(parameters); } catch { /* Browser may not support bitrate control. */ }
+        }, 6000);
         await checkSignals(); timer = setInterval(() => void checkSignals(), 1200);
         connectionTimer = setTimeout(() => { if (pc?.connectionState !== 'connected') setCallState('disconnected'); }, 25000);
         if (session.initiator_id === user.id) { const offer = await pc.createOffer(); await pc.setLocalDescription(offer); await sendSignal({type:'offer',sdp:offer as unknown as Json}); }
       } catch { setCallState('disconnected'); notify('Camera or microphone permission is needed for this call. Check browser settings or try text chat.'); }
     }
     void initialize();
-    return () => { alive=false; clearInterval(timer); clearTimeout(connectionTimer); supabase.removeChannel(channel); pc?.close(); stream?.getTracks().forEach(t => t.stop()); pcRef.current=null; };
+    return () => { alive=false; clearInterval(timer); clearInterval(qualityTimer); clearTimeout(connectionTimer); supabase.removeChannel(channel); pc?.close(); stream?.getTracks().forEach(t => t.stop()); pcRef.current=null; };
   }, [session.id]);
   useEffect(() => chatEnd.current?.scrollIntoView({behavior:'smooth'}), [messages.length]);
   const end = async (next=false) => { await supabase.rpc('session_transition',{_session:session.id,_to:'ended',_reason:next?'next':'left'}); next?onNext():onClose(); };
   const send = async (e: React.FormEvent) => { e.preventDefault(); const parsed=messageSchema.safeParse(draft); if (!parsed.success) { notify(parsed.error.issues[0]?.message || 'Invalid message'); return; } const {error}=await supabase.from('session_messages').insert({session_id:session.id,sender_id:user.id,body:parsed.data}); if (error) notify(error.message); else {setDraft(''); const {data}=await supabase.from('session_messages').select('*').eq('session_id',session.id).order('created_at');setMessages(data||[]);} };
   const report = async () => { const reason=window.prompt('What happened? (harassment, inappropriate content, spam, other)'); if (!reason) return; const {error}=await supabase.rpc('submit_report',{_block:true,_category:'other',_note:reason.slice(0,500),_reported:peerId,_session:session.id}); if (error) notify(error.message); else {notify('Reported and blocked. Thank you for helping keep Jnoy safe.'); await end();} };
-  const saveConnection = async () => { const { data, error } = await supabase.rpc('set_mutual_connection_decision', { _session: session.id, _accept: true }); if (error) notify(error.message); else { setSaved(data === 'active' ? 'active' : 'pending'); notify(data === 'active' ? 'You both connected! Find them in Messages.' : 'Saved! They’ll appear in Messages if you both choose to connect.'); } };
+  const saveConnection = async () => { const { data, error } = await supabase.rpc('set_mutual_connection_decision', { _session: session.id, _accept: true }); if (error) notify(error.message); else if (data === 'active' || data === 'pending') { setSaved(data); notify(data === 'active' ? 'You both connected! Find them in Messages.' : 'Saved! They’ll appear in Messages if you both choose to connect.'); } else notify('This connection is no longer available.'); };
   const toggleMic = () => {local?.getAudioTracks().forEach(t => t.enabled=!micOn);setMicOn(!micOn);}; const toggleCamera=()=>{local?.getVideoTracks().forEach(t=>t.enabled=!camOn);setCamOn(!camOn);};
   return <div className="call-page"><div className="call-top"><Brand light/><div className="call-status"><span className="live-dot"/> {callState === 'connecting' ? 'Connecting you…' : callState === 'disconnected' ? 'Connection lost' : 'Connected · Say hello!'}</div><button onClick={report} className="report-top"><Flag size={17}/> Report</button></div><div className="call-layout"><div className="call-main">{session.mode === 'text' ? <div className="text-call-art"><img src={world} alt="Colorful clay globe" width={1280} height={1024}/><h2>Say hello to {partner?.display_name || 'someone new'}.</h2><p>A great conversation can start with just a few words.</p></div> : <VideoStage stream={remote} label={remote ? partner?.display_name || 'New connection' : callState==='disconnected' ? 'Connection lost — try another match' : `Connecting to ${partner?.display_name || 'your match'}…`} remote offline={callState==='disconnected'}/>}<div className="call-overlay-info"><span>{partner?.display_name || 'New connection'}</span><small>{countryLabel(partner?.country_code)} · {session.mode} chat</small></div>{session.mode!=='text' && <div className="self-preview"><VideoStage stream={session.mode==='video' && camOn ? local : null} label="You"/></div>}<div className="call-controls">{session.mode !== 'text' && <><button aria-label={micOn?'Mute microphone':'Unmute microphone'} onClick={toggleMic}><span>{micOn?<Mic size={22}/>:<MicOff size={22}/>}</span>Mic</button>{session.mode==='video' && <button aria-label={camOn?'Turn camera off':'Turn camera on'} onClick={toggleCamera}><span>{camOn?<Camera size={22}/>:<CameraOff size={22}/>}</span>Camera</button>}</>}<button onClick={saveConnection} disabled={saved !== 'idle'}><span><Heart size={22}/></span>{saved === 'active' ? 'Connected' : saved === 'pending' ? 'Saved' : 'Connect'}</button><button onClick={report}><span><Flag size={22}/></span>Report</button><button onClick={() => end(true)} className="next-control"><span><Shuffle size={22}/></span>Next</button><button onClick={() => end()} className="end-control"><span><PhoneOff size={22}/></span>End</button></div></div><div className="call-chat"><div className="chat-title"><div><MessageCircle size={19}/><h3>Conversation</h3></div><span>LIVE CHAT</span></div><div className="chat-messages"><div className="chat-welcome"><Sparkles size={24}/><h4>It starts with hello.</h4><p>Be kind, stay curious. Never share personal contact details.</p></div>{messages.map(m => <div key={m.id} className={`bubble ${m.sender_id===user.id?'mine':''}`}><small>{m.sender_id===user.id?'You':partner?.display_name||'Match'}</small>{m.body}</div>)}<div ref={chatEnd}/></div><form className="chat-form" onSubmit={send}><input value={draft} onChange={e=>setDraft(e.target.value)} placeholder="Say something nice…" maxLength={2000} aria-label="Message"/><button aria-label="Send message"><Send size={18}/></button></form></div></div></div>;
 }
