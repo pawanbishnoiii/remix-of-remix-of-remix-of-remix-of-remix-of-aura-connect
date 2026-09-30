@@ -126,7 +126,7 @@ function Home() {
         : !user ? <><Hero onStart={() => setAuthOpen(true)}/><GuestPreview onStart={() => setAuthOpen(true)}/><HowItWorks/><BottomCta onStart={() => setAuthOpen(true)}/></>
         : needsOnboarding ? <Onboarding user={user} profile={profile} prefs={prefs} detectedCountry={detectedCountry ?? profile?.detected_country ?? null} notify={notify} onSkip={skip} onDone={async () => { await refresh(); setSection('discover'); }}/>
         : inCall ? <CallRoom key={active!.id} session={active!} user={user} notify={notify} onClose={() => { setAutoStart(false); setActive(null); setSection('discover'); }} onNext={() => { setActive(null); setSection('discover'); setAutoStart(true); }}/>
-        : section === 'messages' ? <Messages user={user} notify={notify}/>
+        : section === 'messages' ? <Messages user={user} notify={notify} onMeet={() => setSection('discover')}/>
         : section === 'profile' ? <ProfilePage user={user} profile={profile} prefs={prefs} detectedCountry={detectedCountry ?? profile?.detected_country ?? null} refresh={refresh} notify={notify} onStart={startFromAnywhere}/>
         : profile ? <MatchStage user={user} profile={profile} prefs={prefs} autoStart={autoStart} onAutoStarted={() => setAutoStart(false)} onSession={setActive} notify={notify} onNeedProfile={() => setSection('profile')} refresh={refresh}/> : null}
     </main>
