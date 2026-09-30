@@ -1,0 +1,1 @@
+REVOKE ALL ON FUNCTION public.guard_message_spam() FROM PUBLIC, anon, authenticated;

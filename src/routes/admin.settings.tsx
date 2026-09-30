@@ -19,6 +19,7 @@ const FIELDS: Field[] = [
   { key: 'safety', field: 'auto_suspend_reports', label: 'Auto-suspend after this many open reports (0 = off)', type: 'number' },
   { key: 'safety', field: 'dm_per_minute', label: 'Max direct messages per minute per user', type: 'number' },
   { key: 'safety', field: 'min_age', label: 'Minimum age', type: 'number' },
+  { key: 'privacy', field: 'staff_chat_review_enabled', label: 'Allow staff to review full match chats (temporary during development)', type: 'bool' },
   { key: 'signup', field: 'open', label: 'Allow new sign-ups', type: 'bool' },
   { key: 'signup', field: 'google_only', label: 'Promote Google as the only sign-in option', type: 'bool' },
   { key: 'announcement', field: 'text', label: 'Banner announcement for members', type: 'text' },
@@ -42,7 +43,7 @@ function SettingsPage() {
   return <div><div className="jn-admin-head"><h1>Settings</h1><p>Platform-wide controls</p></div>
     <div className="surface jn-settings">{FIELDS.map((f, i) => { const v = vals[f.key]?.[f.field]; return <div key={f.key + f.field}>{(i === 0 || FIELDS[i - 1]!.key !== f.key) && <h3 className="jn-sub">{f.key[0]!.toUpperCase() + f.key.slice(1)}</h3>}<label className="jn-setting">
       <span>{f.label}</span>
-      {f.type === 'bool' ? <input type="checkbox" checked={!!v} onChange={e => set(f.key, f.field, e.target.checked)}/>
+      {f.type === 'bool' ? <input type="checkbox" checked={v === undefined && f.field === 'staff_chat_review_enabled' ? true : !!v} onChange={e => set(f.key, f.field, e.target.checked)}/>
         : f.type === 'number' ? <input type="number" min={0} max={3600} value={typeof v === 'number' ? v : ''} onChange={e => set(f.key, f.field, Number(e.target.value))}/>
         : <input value={typeof v === 'string' ? v : ''} maxLength={200} onChange={e => set(f.key, f.field, e.target.value)}/>}
     </label></div>; })}

@@ -13,7 +13,7 @@ import clayMic from '@/assets/clay-mic.webp';
 
 type CamState = 'idle' | 'requesting' | 'denied' | 'ready';
 
-export function MatchStage({ user, profile, prefs, autoStart, onAutoStarted, onSession, notify, onNeedProfile, refresh }: { user: User; profile: Profile; prefs: Prefs | null; autoStart: boolean; onAutoStarted: () => void; onSession: (s: Session) => void; notify: (s: string) => void; onNeedProfile: () => void; refresh: () => Promise<void> }) {
+export function MatchStage({ user, profile, prefs, autoStart, onAutoStarted, onSession, notify, onNeedProfile, onMessages, refresh }: { user: User; profile: Profile; prefs: Prefs | null; autoStart: boolean; onAutoStarted: () => void; onSession: (s: Session) => void; notify: (s: string) => void; onNeedProfile: () => void; onMessages: () => void; refresh: () => Promise<void> }) {
   const [mode, setMode] = useState<Mode>((prefs?.default_mode as Mode) || 'video');
   const [searching, setSearching] = useState(false);
   const [waited, setWaited] = useState(0);
@@ -112,7 +112,7 @@ export function MatchStage({ user, profile, prefs, autoStart, onAutoStarted, onS
       </div>
     </div>
     <aside className="jn-chat-panel">
-      <div className="chat-title"><div><MessageCircle size={19}/><h3>Chat</h3></div><span>{searching ? 'SEARCHING' : 'WAITING'}</span></div>
+       <div className="chat-title"><button className="jn-messages-link" onClick={onMessages} title="Open messages"><MessageCircle size={19}/><span>Messages</span><ArrowRight size={15}/></button><span>{searching ? 'SEARCHING' : 'WAITING'}</span></div>
       <div className="chat-messages"><div className="chat-welcome"><Sparkles size={24}/><h4>Chat opens when you connect.</h4><p>Each match starts a fresh, private chat. Never share phone numbers or social handles.</p></div>
         <ul className="jn-tips"><li><ShieldCheck size={15}/> Report instantly if anything feels wrong</li><li><Wifi size={15}/> Video adjusts to slow internet</li><li><Globe2 size={15}/> Nearby first, then the whole world</li></ul>
       </div>

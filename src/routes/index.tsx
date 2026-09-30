@@ -2,7 +2,7 @@ import { createFileRoute, Link } from '@tanstack/react-router';
 import { useEffect, useState } from 'react';
 import type { User } from '@supabase/supabase-js';
 import { AnimatePresence } from 'motion/react';
-import { ArrowUpRight, Compass, MessageCircle, Shield, X } from 'lucide-react';
+import { ArrowUpRight, Shield, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Brand } from '@/components/jnoy/Brand';
 import { AuthModal } from '@/components/jnoy/AuthModal';
@@ -109,7 +109,6 @@ function Home() {
       <Brand light/>
       {user && !needsOnboarding && <nav className="header-links">
         <button onClick={() => go('discover')} className={section === 'discover' ? 'selected' : ''}>Discover</button>
-        <button onClick={() => go('messages')} className={section === 'messages' ? 'selected' : ''}>Messages</button>
         <button onClick={() => go('profile')} className={section === 'profile' ? 'selected' : ''}>Profile</button>
         {isAdmin && <Link to="/admin" className="jn-admin-link"><Shield size={14}/> Admin</Link>}
       </nav>}
@@ -128,15 +127,10 @@ function Home() {
         : inCall ? <CallRoom key={active!.id} session={active!} user={user} notify={notify} onClose={() => { setAutoStart(false); setActive(null); setSection('discover'); }} onNext={() => { setActive(null); setSection('discover'); setAutoStart(true); }}/>
         : section === 'messages' ? <Messages user={user} notify={notify} onMeet={() => setSection('discover')}/>
         : section === 'profile' ? <ProfilePage user={user} profile={profile} prefs={prefs} detectedCountry={detectedCountry ?? profile?.detected_country ?? null} refresh={refresh} notify={notify} onStart={startFromAnywhere}/>
-        : profile ? <MatchStage user={user} profile={profile} prefs={prefs} autoStart={autoStart} onAutoStarted={() => setAutoStart(false)} onSession={setActive} notify={notify} onNeedProfile={() => setSection('profile')} refresh={refresh}/> : null}
+        : profile ? <MatchStage user={user} profile={profile} prefs={prefs} autoStart={autoStart} onAutoStarted={() => setAutoStart(false)} onSession={setActive} notify={notify} onNeedProfile={() => setSection('profile')} onMessages={() => setSection('messages')} refresh={refresh}/> : null}
     </main>
 
     {!user && ready && <SiteFooter/>}
-    {user && !inCall && !needsOnboarding && loaded && <nav className="mobile-nav">
-      <button className={section === 'discover' ? 'active' : ''} onClick={() => go('discover')}><Compass size={22}/>Discover</button>
-      <button className={section === 'messages' ? 'active' : ''} onClick={() => go('messages')}><MessageCircle size={22}/>Messages</button>
-      <button className={section === 'profile' ? 'active' : ''} onClick={() => go('profile')}><span className="nav-avatar">{profile?.display_name?.[0] || 'J'}</span>Profile</button>
-    </nav>}
     {!user && ready && <button className="mobile-match-cta" onClick={() => setAuthOpen(true)}>Continue with Google</button>}
     <AnimatePresence>{authOpen && <AuthModal onClose={() => setAuthOpen(false)} notify={notify}/>}</AnimatePresence>
     {toast && <div className="toast" role="status">{toast}<button onClick={() => setToast('')} aria-label="Dismiss"><X size={15}/></button></div>}

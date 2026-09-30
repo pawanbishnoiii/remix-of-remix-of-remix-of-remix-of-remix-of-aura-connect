@@ -25,16 +25,19 @@ export function Messages({ user, notify, onMeet }: { user: User; notify: (s: str
   }, [user.id]);
   useEffect(() => {
     if (!selected) return;
-    const load = () => supabase.from('direct_messages').select('*').eq('connection_id', selected).order('created_at').then(({ data }) => setMessages(data || []));
+    let alive = true;
+    const load = () => supabase.from('direct_messages').select('*').eq('connection_id', selected).order('created_at').then(({ data, error }) => { if (alive && !error) setMessages(data || []); });
     void load();
-    const ch = supabase.channel('direct-' + selected).on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'direct_messages', filter: `connection_id=eq.${selected}` }, () => void load()).subscribe();
-    return () => { supabase.removeChannel(ch); };
+    const ch = supabase.channel('direct-' + selected).on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'direct_messages', filter: `connection_id=eq.${selected}` }, () => void load()).subscribe(status => { if (status === 'SUBSCRIBED') void load(); });
+    const timer = setInterval(() => { if (document.visibilityState === 'visible') void load(); }, 3000);
+    return () => { alive = false; clearInterval(timer); supabase.removeChannel(ch); };
   }, [selected]);
   const send = async (e: React.FormEvent) => {
     e.preventDefault(); const r = messageSchema.safeParse(draft);
     if (!r.success) { notify(r.error.issues[0]?.message || 'Invalid message'); return; }
-    const { error } = await supabase.from('direct_messages').insert({ connection_id: selected!, sender_id: user.id, body: r.data });
-    if (error) notify(error.message); else { setDraft(''); const { data } = await supabase.from('direct_messages').select('*').eq('connection_id', selected!).order('created_at'); setMessages(data || []); }
+    if (!selected) return;
+    const { error } = await supabase.from('direct_messages').insert({ connection_id: selected, sender_id: user.id, body: r.data });
+    if (error) notify(error.message); else { setDraft(''); const { data } = await supabase.from('direct_messages').select('*').eq('connection_id', selected).order('created_at'); setMessages(data || []); }
   };
   const sel = connections.find(c => c.id === selected); const partner = sel ? names[other(sel)] : undefined;
   return <div className="interior-page"><div className="interior-header"><span className="section-kicker">KEEP THE CONVERSATION GOING</span><h1>The people you <em>clicked with.</em></h1><p>Only mutual connections appear here.</p></div>

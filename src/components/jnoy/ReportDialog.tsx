@@ -18,7 +18,7 @@ export function ReportDialog({ hasVideo, onCancel, onSubmit }: { hasVideo: boole
       <p>They’ll be blocked and the call ends. {hasVideo ? 'A screenshot of their video and the chat are saved for our safety team only.' : 'The chat is saved for our safety team only.'}</p>
       <div className="jn-report-list">{REPORT_CATEGORIES.map(c => <button type="button" key={c.id} className={cat === c.id ? 'on' : ''} onClick={() => setCat(c.id)}>{c.label}</button>)}</div>
       <label>Anything else? <small>optional</small><textarea value={note} maxLength={500} onChange={e => setNote(e.target.value)} rows={3} placeholder="Tell us what happened"/></label>
-      <button className="full-primary jn-danger" disabled={!cat || busy} onClick={async () => { setBusy(true); await onSubmit(cat, note); setBusy(false); }}>{busy ? 'Sending…' : 'Report & block'}</button>
+      <button className="full-primary jn-danger" disabled={!cat || busy} onClick={async () => { setBusy(true); try { await onSubmit(cat, note); } finally { setBusy(false); } }}>{busy ? 'Sending…' : 'Report & block'}</button>
     </div>
   </div>;
 }

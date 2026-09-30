@@ -1,0 +1,7 @@
+- [x] Repair staff chat review error and add a privacy switch.
+- [x] Enforce spam limits for match and direct messages.
+- [x] Repair incoming chat updates and typing presence.
+- [x] Improve report and profile privacy controls.
+- [x] Hide Messages navigation and remove phone bottom navigation.
+- [x] Improve country selection and member phone matching layout.
+- [ ] Verify two-user chat and call flows (requires two active test accounts).
