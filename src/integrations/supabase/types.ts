@@ -393,14 +393,21 @@ export type Database = {
       }
       profiles: {
         Row: {
+          age: number | null
           avatar_url: string | null
           banned_until: string | null
           bio: string | null
           country_code: string | null
           created_at: string
+          detected_country: string | null
           display_name: string | null
+          first_name: string | null
+          gender: string | null
           id: string
           is_banned: boolean
+          last_ip: unknown
+          last_login_at: string | null
+          last_name: string | null
           last_seen_at: string | null
           onboarding_completed: boolean
           pronouns: string | null
@@ -408,14 +415,21 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          age?: number | null
           avatar_url?: string | null
           banned_until?: string | null
           bio?: string | null
           country_code?: string | null
           created_at?: string
+          detected_country?: string | null
           display_name?: string | null
+          first_name?: string | null
+          gender?: string | null
           id: string
           is_banned?: boolean
+          last_ip?: unknown
+          last_login_at?: string | null
+          last_name?: string | null
           last_seen_at?: string | null
           onboarding_completed?: boolean
           pronouns?: string | null
@@ -423,14 +437,21 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          age?: number | null
           avatar_url?: string | null
           banned_until?: string | null
           bio?: string | null
           country_code?: string | null
           created_at?: string
+          detected_country?: string | null
           display_name?: string | null
+          first_name?: string | null
+          gender?: string | null
           id?: string
           is_banned?: boolean
+          last_ip?: unknown
+          last_login_at?: string | null
+          last_name?: string | null
           last_seen_at?: string | null
           onboarding_completed?: boolean
           pronouns?: string | null
@@ -756,6 +777,7 @@ export type Database = {
       admin_metrics: { Args: never; Returns: Json }
       block_user: { Args: { _target: string }; Returns: undefined }
       delete_my_account: { Args: never; Returns: undefined }
+      ensure_my_profile: { Args: never; Returns: undefined }
       find_or_create_match: { Args: never; Returns: Json }
       has_role: {
         Args: {

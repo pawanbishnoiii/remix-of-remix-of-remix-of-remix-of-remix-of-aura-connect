@@ -19,9 +19,18 @@ export const recordActivity = createServerFn({ method: 'POST' })
     const now = new Date().toISOString();
     if (data.visitId) {
       await supabaseAdmin.from('login_visits').update({ last_seen_at: now, ...(data.end ? { ended_at: now } : {}) }).eq('id', data.visitId).eq('user_id', context.userId);
+      await supabaseAdmin.from('profiles').update({ last_seen_at: now }).eq('id', context.userId);
       return { visitId: data.visitId, country };
     }
+    // Make sure the profile row exists before recording (visits reference profiles).
+    await supabaseAdmin.from('profiles').upsert({ id: context.userId }, { onConflict: 'id', ignoreDuplicates: true });
+    await supabaseAdmin.from('user_preferences').upsert({ user_id: context.userId }, { onConflict: 'user_id', ignoreDuplicates: true });
+    const { data: prof } = await supabaseAdmin.from('profiles').select('country_code').eq('id', context.userId).maybeSingle();
+    await supabaseAdmin.from('profiles').update({
+      last_ip: ip, last_login_at: now, last_seen_at: now, detected_country: country,
+      ...(country && !prof?.country_code ? { country_code: country } : {}),
+    }).eq('id', context.userId);
     const { data: visit, error } = await supabaseAdmin.from('login_visits').insert({ user_id: context.userId, country_code: country, ip_address: ip, started_at: now, last_seen_at: now }).select('id').single();
-    if (error) throw new Error('Activity could not be saved');
+    if (error) { console.error('login visit insert failed', error.message); return { visitId: null, country }; }
     return { visitId: visit.id, country };
   });
