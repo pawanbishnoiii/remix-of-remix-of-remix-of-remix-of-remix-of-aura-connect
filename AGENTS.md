@@ -8,3 +8,7 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+
+- Match and direct chat delivery uses database realtime plus periodic read reconciliation, because browser subscriptions can disconnect silently.
+- Staff match-chat review is a server-checked, auditable database function gated by the Privacy setting, because client-side settings cannot authorize private reads.
+- Message flood and repetition checks run in database triggers, because client-only moderation is bypassable.

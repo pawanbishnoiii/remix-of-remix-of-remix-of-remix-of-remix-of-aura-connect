@@ -6,7 +6,7 @@ export function CountryPicker({ value, onChange, max = 5 }: { value: string[]; o
   const [q, setQ] = useState('');
   const list = useMemo(() => {
     const t = q.trim().toLowerCase();
-    return COUNTRIES.filter(c => !t || c.label.toLowerCase().includes(t) || c.code.toLowerCase() === t);
+    return COUNTRIES.filter(c => !t || c.label.toLowerCase().includes(t) || c.code.toLowerCase() === t || c.flag === t);
   }, [q]);
   const toggle = (code: string) => onChange(value.includes(code) ? value.filter(c => c !== code) : value.length < max ? [...value, code] : value);
   return <div className="jn-cpick">

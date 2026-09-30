@@ -39,7 +39,7 @@ export function ProfilePage({ user, profile, prefs, detectedCountry, refresh, no
         <div className="tag-row">{v.tags.map(t => <span key={t}>✳ {t}</span>)}</div>
         <button className="full-primary jn-mt" onClick={onStart}>Start matching <ArrowRight size={17}/></button>
       </div>
-      <div className="surface edit-card"><h2>Make it yours</h2>
+      <div className="jn-profile-main"><div className="surface edit-card"><h2>Make it yours</h2>
         <ProfileFields v={v} set={x => { setV(x); setJustSaved(false); }} detectedCountry={detectedCountry}/>
         <button className="full-primary" onClick={save} disabled={busy}>{busy ? 'Saving…' : 'Save changes'} <ArrowRight size={17}/></button>
         {justSaved && <button className="full-primary jn-start-after" onClick={onStart}>Saved — start matching now <ArrowRight size={17}/></button>}
@@ -49,7 +49,7 @@ export function ProfilePage({ user, profile, prefs, detectedCountry, refresh, no
         <h3 className="jn-sub">Consent history</h3>
         {consents.length ? <ul className="jn-consents">{consents.map(c => <li key={c.policy_type + c.policy_version}><span>{LABEL[c.policy_type] || c.policy_type} <small>v{c.policy_version}</small></span><time>{new Date(c.accepted_at).toLocaleDateString()}</time></li>)}</ul> : <p className="jn-muted">No consent recorded yet.</p>}
         <div className="jn-row"><button className="preview-activate" onClick={doExport}><Download size={15}/> Download my data</button><button className="preview-activate jn-danger" onClick={doDelete}><Trash2 size={15}/> Delete account</button></div>
-      </div>
+      </div></div>
     </div>
   </div>;
 }

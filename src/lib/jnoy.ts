@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import type { Database } from '@/integrations/supabase/types';
+import { getData } from 'country-list';
 
 export type Profile = Database['public']['Tables']['profiles']['Row'];
 export type Prefs = Database['public']['Tables']['user_preferences']['Row'];
@@ -7,17 +8,9 @@ export type Session = Database['public']['Tables']['conversation_sessions']['Row
 export type Msg = Database['public']['Tables']['session_messages']['Row'];
 export type Mode = 'video' | 'audio' | 'text';
 
-export const COUNTRIES = [
-  { code: 'IN', label: 'India', flag: '🇮🇳' }, { code: 'US', label: 'United States', flag: '🇺🇸' }, { code: 'GB', label: 'United Kingdom', flag: '🇬🇧' },
-  { code: 'CA', label: 'Canada', flag: '🇨🇦' }, { code: 'AU', label: 'Australia', flag: '🇦🇺' }, { code: 'DE', label: 'Germany', flag: '🇩🇪' },
-  { code: 'FR', label: 'France', flag: '🇫🇷' }, { code: 'JP', label: 'Japan', flag: '🇯🇵' }, { code: 'BR', label: 'Brazil', flag: '🇧🇷' },
-  { code: 'AE', label: 'UAE', flag: '🇦🇪' }, { code: 'PK', label: 'Pakistan', flag: '🇵🇰' }, { code: 'BD', label: 'Bangladesh', flag: '🇧🇩' },
-  { code: 'NP', label: 'Nepal', flag: '🇳🇵' }, { code: 'LK', label: 'Sri Lanka', flag: '🇱🇰' }, { code: 'ID', label: 'Indonesia', flag: '🇮🇩' },
-  { code: 'PH', label: 'Philippines', flag: '🇵🇭' }, { code: 'MX', label: 'Mexico', flag: '🇲🇽' }, { code: 'ES', label: 'Spain', flag: '🇪🇸' },
-  { code: 'IT', label: 'Italy', flag: '🇮🇹' }, { code: 'TR', label: 'Türkiye', flag: '🇹🇷' }, { code: 'SA', label: 'Saudi Arabia', flag: '🇸🇦' },
-  { code: 'NG', label: 'Nigeria', flag: '🇳🇬' }, { code: 'ZA', label: 'South Africa', flag: '🇿🇦' }, { code: 'KR', label: 'South Korea', flag: '🇰🇷' },
-  { code: 'SG', label: 'Singapore', flag: '🇸🇬' }, { code: 'NL', label: 'Netherlands', flag: '🇳🇱' }, { code: 'RU', label: 'Russia', flag: '🇷🇺' },
-];
+export const COUNTRIES = getData().map(({ code, name }) => ({
+  code, label: name, flag: [...code].map(char => String.fromCodePoint(char.charCodeAt(0) + 127397)).join(''),
+}));
 export const LANGUAGES = ['English', 'Hindi', 'Urdu', 'Bengali', 'Spanish', 'French', 'German', 'Portuguese', 'Arabic', 'Japanese', 'Korean', 'Indonesian', 'Turkish', 'Russian', 'Italian'];
 export const INTERESTS = ['Travel', 'Music', 'Art', 'Food', 'Books', 'Gaming', 'Culture', 'Movies', 'Nature', 'Design', 'Photography', 'Language', 'Fitness', 'Tech', 'Anime', 'Cricket', 'Football', 'Coding'];
 export const MAX_TAGS = 12;
