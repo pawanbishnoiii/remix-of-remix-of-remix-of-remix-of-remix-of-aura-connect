@@ -1,3 +1,0 @@
-revoke execute on function public.has_role(uuid, app_role), public.is_staff(uuid), public.is_active_connection_member(uuid, uuid) from public, anon;
-grant execute on function public.has_role(uuid, app_role), public.is_staff(uuid), public.is_active_connection_member(uuid, uuid) to authenticated;
-revoke execute on function public.handle_new_user(), public.protect_profile_fields(), public.dm_rate_limit(), public.touch_updated_at() from public, anon, authenticated;
