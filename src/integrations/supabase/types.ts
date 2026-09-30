@@ -14,6 +14,27 @@ export type Database = {
   }
   public: {
     Tables: {
+      app_settings: {
+        Row: {
+          key: string
+          updated_at: string
+          updated_by: string | null
+          value: Json
+        }
+        Insert: {
+          key: string
+          updated_at?: string
+          updated_by?: string | null
+          value?: Json
+        }
+        Update: {
+          key?: string
+          updated_at?: string
+          updated_by?: string | null
+          value?: Json
+        }
+        Relationships: []
+      }
       call_signals: {
         Row: {
           created_at: string
@@ -173,33 +194,45 @@ export type Database = {
       }
       login_visits: {
         Row: {
+          city: string | null
           country_code: string | null
+          device_name: string | null
           ended_at: string | null
           id: string
           ip_address: unknown
           last_seen_at: string
+          region: string | null
           started_at: string
           updated_at: string
+          user_agent: string | null
           user_id: string
         }
         Insert: {
+          city?: string | null
           country_code?: string | null
+          device_name?: string | null
           ended_at?: string | null
           id?: string
           ip_address?: unknown
           last_seen_at?: string
+          region?: string | null
           started_at?: string
           updated_at?: string
+          user_agent?: string | null
           user_id: string
         }
         Update: {
+          city?: string | null
           country_code?: string | null
+          device_name?: string | null
           ended_at?: string | null
           id?: string
           ip_address?: unknown
           last_seen_at?: string
+          region?: string | null
           started_at?: string
           updated_at?: string
+          user_agent?: string | null
           user_id?: string
         }
         Relationships: [
@@ -394,13 +427,18 @@ export type Database = {
       profiles: {
         Row: {
           age: number | null
+          auth_provider: string | null
           avatar_url: string | null
           banned_until: string | null
           bio: string | null
           country_code: string | null
           created_at: string
+          detected_city: string | null
           detected_country: string | null
+          detected_region: string | null
+          device_name: string | null
           display_name: string | null
+          email: string | null
           first_name: string | null
           gender: string | null
           id: string
@@ -412,17 +450,23 @@ export type Database = {
           onboarding_completed: boolean
           pronouns: string | null
           tags: string[]
+          terms_accepted_at: string | null
           updated_at: string
         }
         Insert: {
           age?: number | null
+          auth_provider?: string | null
           avatar_url?: string | null
           banned_until?: string | null
           bio?: string | null
           country_code?: string | null
           created_at?: string
+          detected_city?: string | null
           detected_country?: string | null
+          detected_region?: string | null
+          device_name?: string | null
           display_name?: string | null
+          email?: string | null
           first_name?: string | null
           gender?: string | null
           id: string
@@ -434,17 +478,23 @@ export type Database = {
           onboarding_completed?: boolean
           pronouns?: string | null
           tags?: string[]
+          terms_accepted_at?: string | null
           updated_at?: string
         }
         Update: {
           age?: number | null
+          auth_provider?: string | null
           avatar_url?: string | null
           banned_until?: string | null
           bio?: string | null
           country_code?: string | null
           created_at?: string
+          detected_city?: string | null
           detected_country?: string | null
+          detected_region?: string | null
+          device_name?: string | null
           display_name?: string | null
+          email?: string | null
           first_name?: string | null
           gender?: string | null
           id?: string
@@ -456,6 +506,7 @@ export type Database = {
           onboarding_completed?: boolean
           pronouns?: string | null
           tags?: string[]
+          terms_accepted_at?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -471,6 +522,7 @@ export type Database = {
           resolution_note: string | null
           reviewed_at: string | null
           reviewed_by: string | null
+          screenshot_path: string | null
           session_id: string | null
           status: string
         }
@@ -484,6 +536,7 @@ export type Database = {
           resolution_note?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
+          screenshot_path?: string | null
           session_id?: string | null
           status?: string
         }
@@ -497,6 +550,7 @@ export type Database = {
           resolution_note?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
+          screenshot_path?: string | null
           session_id?: string | null
           status?: string
         }
@@ -761,6 +815,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      accept_terms: { Args: never; Returns: undefined }
       admin_list_users: {
         Args: { _q: string }
         Returns: {
@@ -774,8 +829,82 @@ export type Database = {
           report_count: number
         }[]
       }
+      admin_list_users_v2: {
+        Args: { _q: string }
+        Returns: {
+          age: number
+          avatar_url: string
+          banned_until: string
+          country_code: string
+          created_at: string
+          detected_city: string
+          device_name: string
+          display_name: string
+          email: string
+          first_name: string
+          gender: string
+          id: string
+          is_banned: boolean
+          last_ip: string
+          last_login_at: string
+          last_name: string
+          last_seen_at: string
+          report_count: number
+          session_count: number
+        }[]
+      }
       admin_metrics: { Args: never; Returns: Json }
+      admin_session_messages: {
+        Args: { _session: string }
+        Returns: {
+          body: string
+          created_at: string
+          id: string
+          sender_id: string
+          sender_name: string
+        }[]
+      }
+      admin_user_sessions: {
+        Args: { _user: string }
+        Returns: {
+          created_at: string
+          end_reason: string
+          ended_at: string
+          id: string
+          message_count: number
+          mode: string
+          partner_id: string
+          partner_name: string
+          status: string
+        }[]
+      }
+      admin_user_visits: {
+        Args: { _user: string }
+        Returns: {
+          city: string
+          country_code: string
+          device_name: string
+          ended_at: string
+          id: string
+          ip: string
+          last_seen_at: string
+          region: string
+          started_at: string
+        }[]
+      }
       block_user: { Args: { _target: string }; Returns: undefined }
+      complete_onboarding: {
+        Args: {
+          _age: number
+          _country: string
+          _first: string
+          _gender: string
+          _language: string
+          _last: string
+          _tags: string[]
+        }
+        Returns: undefined
+      }
       delete_my_account: { Args: never; Returns: undefined }
       ensure_my_profile: { Args: never; Returns: undefined }
       find_or_create_match: { Args: never; Returns: Json }
@@ -823,6 +952,16 @@ export type Database = {
           _session: string
         }
         Returns: undefined
+      }
+      submit_report_v2: {
+        Args: {
+          _category: string
+          _note: string
+          _reported: string
+          _screenshot: string
+          _session: string
+        }
+        Returns: string
       }
     }
     Enums: {
