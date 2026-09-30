@@ -1,0 +1,2 @@
+import { Sparkles } from 'lucide-react';
+export function Brand({ light = false }: { light?: boolean }) { return <span className={`brand ${light ? 'brand-light' : ''}`}><span className="brand-mark"><Sparkles size={19} strokeWidth={2.8}/></span> jnoy<span className="brand-dot">.</span></span> }
