@@ -22,7 +22,7 @@ async function captureFrame(): Promise<Blob | null> {
   return new Promise(res => canvas.toBlob(b => res(b), 'image/jpeg', 0.8));
 }
 
-export function CallRoom({ session, user, onClose, onNext, notify }: { session: Session; user: User; onClose: () => void; onNext: () => void; notify: (s: string) => void }) {
+export function CallRoom({ session, user, onClose, onNext, notify, autoNext }: { session: Session; user: User; onClose: () => void; onNext: () => void; notify: (s: string) => void; autoNext: boolean }) {
   const peerId = session.user_a_id === user.id ? session.user_b_id : session.user_a_id;
   const [partner, setPartner] = useState<PublicPartner | null>(null);
   const [saved, setSaved] = useState<'idle' | 'pending' | 'active'>('idle');
@@ -62,7 +62,7 @@ export function CallRoom({ session, user, onClose, onNext, notify }: { session: 
       })
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'session_messages', filter: `session_id=eq.${session.id}` }, p => { if (alive) setMessages(m => m.some(x => x.id === (p.new as Msg).id) ? m : [...m, p.new as Msg].sort((a,b) => a.created_at.localeCompare(b.created_at))); setChatOpen(true); })
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'conversation_sessions', filter: `id=eq.${session.id}` }, p => {
-        if (['ended', 'failed', 'reported'].includes((p.new as Session).status) && !leaving.current) { setCallState('disconnected'); notify('They left. Finding someone new…'); setTimeout(onNext, 1400); }
+        if (['ended', 'failed', 'reported'].includes((p.new as Session).status) && !leaving.current) { setCallState('disconnected'); notify(autoNext ? 'They left. Finding someone new…' : 'They left this chat.'); if (autoNext) setTimeout(onNext, 1400); }
       }).subscribe(status => { if (status === 'SUBSCRIBED') void load(); });
     roomChannel.current = channel;
     const chatTimer = setInterval(() => { if (document.visibilityState === 'visible') void load(); }, 3000);

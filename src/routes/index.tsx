@@ -17,6 +17,7 @@ import { GuestPreview } from '@/components/jnoy/home/GuestPreview';
 import { HowItWorks } from '@/components/jnoy/home/HowItWorks';
 import { BottomCta } from '@/components/jnoy/home/BottomCta';
 import { recordActivity } from '@/lib/activity.functions';
+import { searchStore } from '@/lib/search';
 import { TERMS_FLAG, type Prefs, type Profile, type Session } from '@/lib/jnoy';
 
 type Section = 'discover' | 'messages' | 'profile';
@@ -48,6 +49,15 @@ function Home() {
   const [toast, setToast] = useState('');
   const [autoStart, setAutoStart] = useState(false);
   const notify = (v: string) => { setToast(v); setTimeout(() => setToast(t => (t === v ? '' : t)), 5000); };
+
+  // One store subscription for the whole app: a match that lands while the
+  // user is on Messages, Profile or another route still opens the call.
+  useEffect(() => searchStore.subscribe(() => {
+    const m = searchStore.matched;
+    if (m) { searchStore.clearMatched(); setActive(m); setSection('discover'); setAutoStart(false); }
+    const err = searchStore.error;
+    if (err) { searchStore.clearError(); notify(err); }
+  }), []);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => { setUser(data.user); setReady(true); });
@@ -124,7 +134,7 @@ function Home() {
       {!ready || (user && !loaded) ? <div className="jn-loading"><div className="search-rings"><span/><span/><span/></div><p>Finding your place in the world…</p></div>
         : !user ? <><Hero onStart={() => setAuthOpen(true)}/><GuestPreview onStart={() => setAuthOpen(true)}/><HowItWorks/><BottomCta onStart={() => setAuthOpen(true)}/></>
         : needsOnboarding ? <Onboarding user={user} profile={profile} prefs={prefs} detectedCountry={detectedCountry ?? profile?.detected_country ?? null} notify={notify} onSkip={skip} onDone={async () => { await refresh(); setSection('discover'); }}/>
-        : inCall ? <CallRoom key={active!.id} session={active!} user={user} notify={notify} onClose={() => { setAutoStart(false); setActive(null); setSection('discover'); }} onNext={() => { setActive(null); setSection('discover'); setAutoStart(true); }}/>
+        : inCall ? <CallRoom key={active!.id} session={active!} user={user} notify={notify} autoNext={prefs?.auto_next ?? true} onClose={() => { setAutoStart(false); setActive(null); setSection('discover'); }} onNext={() => { setActive(null); setSection('discover'); setAutoStart(true); }}/>
         : section === 'messages' ? <Messages user={user} notify={notify} onMeet={() => setSection('discover')}/>
         : section === 'profile' ? <ProfilePage user={user} profile={profile} prefs={prefs} detectedCountry={detectedCountry ?? profile?.detected_country ?? null} refresh={refresh} notify={notify} onStart={startFromAnywhere}/>
         : profile ? <MatchStage user={user} profile={profile} prefs={prefs} autoStart={autoStart} onAutoStarted={() => setAutoStart(false)} onSession={setActive} notify={notify} onNeedProfile={() => setSection('profile')} onMessages={() => setSection('messages')} refresh={refresh}/> : null}

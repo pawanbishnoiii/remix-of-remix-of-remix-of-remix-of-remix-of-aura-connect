@@ -12,3 +12,5 @@
 - Match and direct chat delivery uses database realtime plus periodic read reconciliation, because browser subscriptions can disconnect silently.
 - Staff match-chat review is a server-checked, auditable database function gated by the Privacy setting, because client-side settings cannot authorize private reads.
 - Message flood and repetition checks run in database triggers, because client-only moderation is bypassable.
+- Match searching lives in a module-level store (`src/lib/search.ts`) so a running search survives navigation between sections/routes; the match queue heartbeat in `find_or_create_match` keeps the row alive while the store polls.
+- Auto re-match ("auto_next" on user_preferences, default true) is honored in index.tsx/CallRoom; when off, a partner leaving returns the user to Discover without auto-starting.

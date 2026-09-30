@@ -5,3 +5,4 @@
 - [x] Hide Messages navigation and remove phone bottom navigation.
 - [x] Improve country selection and member phone matching layout.
 - [ ] Verify two-user chat and call flows (requires two active test accounts).
+- [x] Make matching persist across navigation with auto re-match and an auto-match filter toggle (default on).
