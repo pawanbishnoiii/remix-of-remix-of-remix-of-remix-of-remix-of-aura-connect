@@ -17,7 +17,7 @@ export function useProfileForm(user: User, profile: Profile | null, prefs: Prefs
       last: profile?.last_name || md['family_name'] || (md['full_name'] || '').split(' ').slice(1).join(' ') || '',
       gender: profile?.gender || '',
       age: profile?.age ? String(profile.age) : '',
-      country: profile?.country_code || detectedCountry || '',
+      country: profile?.country_code || '',
       language: prefs?.languages?.[0] || 'English',
       tags: profile?.tags || [],
     });
