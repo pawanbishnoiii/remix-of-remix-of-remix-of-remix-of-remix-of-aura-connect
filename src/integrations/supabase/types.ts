@@ -14,16 +14,665 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      conversation_sessions: {
+        Row: {
+          connected_at: string | null
+          created_at: string
+          end_reason: string | null
+          ended_at: string | null
+          ended_by: string | null
+          id: string
+          initiator_id: string
+          mode: string
+          started_at: string
+          status: string
+          user_a_id: string
+          user_b_id: string
+        }
+        Insert: {
+          connected_at?: string | null
+          created_at?: string
+          end_reason?: string | null
+          ended_at?: string | null
+          ended_by?: string | null
+          id?: string
+          initiator_id: string
+          mode: string
+          started_at?: string
+          status?: string
+          user_a_id: string
+          user_b_id: string
+        }
+        Update: {
+          connected_at?: string | null
+          created_at?: string
+          end_reason?: string | null
+          ended_at?: string | null
+          ended_by?: string | null
+          id?: string
+          initiator_id?: string
+          mode?: string
+          started_at?: string
+          status?: string
+          user_a_id?: string
+          user_b_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversation_sessions_user_a_id_fkey"
+            columns: ["user_a_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversation_sessions_user_b_id_fkey"
+            columns: ["user_b_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      direct_messages: {
+        Row: {
+          body: string
+          connection_id: string
+          created_at: string
+          deleted_by_recipient_at: string | null
+          deleted_by_sender_at: string | null
+          id: string
+          read_at: string | null
+          sender_id: string
+        }
+        Insert: {
+          body: string
+          connection_id: string
+          created_at?: string
+          deleted_by_recipient_at?: string | null
+          deleted_by_sender_at?: string | null
+          id?: string
+          read_at?: string | null
+          sender_id: string
+        }
+        Update: {
+          body?: string
+          connection_id?: string
+          created_at?: string
+          deleted_by_recipient_at?: string | null
+          deleted_by_sender_at?: string | null
+          id?: string
+          read_at?: string | null
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "direct_messages_connection_id_fkey"
+            columns: ["connection_id"]
+            isOneToOne: false
+            referencedRelation: "mutual_connections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "direct_messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      match_queue: {
+        Row: {
+          desired_mode: string
+          expires_at: string
+          heartbeat_at: string
+          preference_snapshot: Json
+          queued_at: string
+          reserved_session_id: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          desired_mode: string
+          expires_at?: string
+          heartbeat_at?: string
+          preference_snapshot?: Json
+          queued_at?: string
+          reserved_session_id?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          desired_mode?: string
+          expires_at?: string
+          heartbeat_at?: string
+          preference_snapshot?: Json
+          queued_at?: string
+          reserved_session_id?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "match_queue_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      moderation_actions: {
+        Row: {
+          action_type: string
+          actor_id: string
+          created_at: string
+          id: string
+          reason: string
+          report_id: string | null
+          target_user_id: string
+        }
+        Insert: {
+          action_type: string
+          actor_id: string
+          created_at?: string
+          id?: string
+          reason: string
+          report_id?: string | null
+          target_user_id: string
+        }
+        Update: {
+          action_type?: string
+          actor_id?: string
+          created_at?: string
+          id?: string
+          reason?: string
+          report_id?: string | null
+          target_user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "moderation_actions_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "reports"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "moderation_actions_target_user_id_fkey"
+            columns: ["target_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mutual_connections: {
+        Row: {
+          activated_at: string | null
+          created_at: string
+          id: string
+          session_id: string | null
+          status: string
+          user_a_accepted_at: string | null
+          user_a_id: string
+          user_b_accepted_at: string | null
+          user_b_id: string
+        }
+        Insert: {
+          activated_at?: string | null
+          created_at?: string
+          id?: string
+          session_id?: string | null
+          status?: string
+          user_a_accepted_at?: string | null
+          user_a_id: string
+          user_b_accepted_at?: string | null
+          user_b_id: string
+        }
+        Update: {
+          activated_at?: string | null
+          created_at?: string
+          id?: string
+          session_id?: string | null
+          status?: string
+          user_a_accepted_at?: string | null
+          user_a_id?: string
+          user_b_accepted_at?: string | null
+          user_b_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mutual_connections_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "conversation_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mutual_connections_user_a_id_fkey"
+            columns: ["user_a_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mutual_connections_user_b_id_fkey"
+            columns: ["user_b_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      policy_acceptances: {
+        Row: {
+          accepted_at: string
+          id: string
+          policy_type: string
+          policy_version: string
+          user_id: string
+        }
+        Insert: {
+          accepted_at?: string
+          id?: string
+          policy_type: string
+          policy_version: string
+          user_id: string
+        }
+        Update: {
+          accepted_at?: string
+          id?: string
+          policy_type?: string
+          policy_version?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "policy_acceptances_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          banned_until: string | null
+          bio: string | null
+          country_code: string | null
+          created_at: string
+          display_name: string | null
+          id: string
+          is_banned: boolean
+          last_seen_at: string | null
+          onboarding_completed: boolean
+          pronouns: string | null
+          tags: string[]
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          banned_until?: string | null
+          bio?: string | null
+          country_code?: string | null
+          created_at?: string
+          display_name?: string | null
+          id: string
+          is_banned?: boolean
+          last_seen_at?: string | null
+          onboarding_completed?: boolean
+          pronouns?: string | null
+          tags?: string[]
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          banned_until?: string | null
+          bio?: string | null
+          country_code?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          is_banned?: boolean
+          last_seen_at?: string | null
+          onboarding_completed?: boolean
+          pronouns?: string | null
+          tags?: string[]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      reports: {
+        Row: {
+          category: string
+          created_at: string
+          id: string
+          note: string | null
+          reported_user_id: string
+          reporter_id: string
+          resolution_note: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          session_id: string | null
+          status: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          id?: string
+          note?: string | null
+          reported_user_id: string
+          reporter_id: string
+          resolution_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          session_id?: string | null
+          status?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          id?: string
+          note?: string | null
+          reported_user_id?: string
+          reporter_id?: string
+          resolution_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          session_id?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reports_reported_user_id_fkey"
+            columns: ["reported_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reports_reporter_id_fkey"
+            columns: ["reporter_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reports_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "conversation_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      session_events: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          event_type: string
+          id: string
+          metadata: Json
+          session_id: string | null
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string
+          event_type: string
+          id?: string
+          metadata?: Json
+          session_id?: string | null
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          event_type?: string
+          id?: string
+          metadata?: Json
+          session_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "session_events_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "conversation_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_blocks: {
+        Row: {
+          blocked_id: string
+          blocker_id: string
+          created_at: string
+        }
+        Insert: {
+          blocked_id: string
+          blocker_id: string
+          created_at?: string
+        }
+        Update: {
+          blocked_id?: string
+          blocker_id?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_blocks_blocked_id_fkey"
+            columns: ["blocked_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_blocks_blocker_id_fkey"
+            columns: ["blocker_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_feedback: {
+        Row: {
+          created_at: string
+          id: string
+          rating: number | null
+          reason: string | null
+          session_id: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          rating?: number | null
+          reason?: string | null
+          session_id?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          rating?: number | null
+          reason?: string | null
+          session_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_feedback_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "conversation_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_feedback_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_preferences: {
+        Row: {
+          approximate_country: string | null
+          approximate_region: string | null
+          auto_next: boolean
+          broaden_after_wait: boolean
+          default_mode: string
+          discoverable: boolean
+          effects_enabled: boolean
+          interests: string[]
+          languages: string[]
+          location_enabled: boolean
+          mirror_preview: boolean
+          preferred_countries: string[]
+          similar_interests: boolean
+          theme: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          approximate_country?: string | null
+          approximate_region?: string | null
+          auto_next?: boolean
+          broaden_after_wait?: boolean
+          default_mode?: string
+          discoverable?: boolean
+          effects_enabled?: boolean
+          interests?: string[]
+          languages?: string[]
+          location_enabled?: boolean
+          mirror_preview?: boolean
+          preferred_countries?: string[]
+          similar_interests?: boolean
+          theme?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          approximate_country?: string | null
+          approximate_region?: string | null
+          auto_next?: boolean
+          broaden_after_wait?: boolean
+          default_mode?: string
+          discoverable?: boolean
+          effects_enabled?: boolean
+          interests?: string[]
+          languages?: string[]
+          location_enabled?: boolean
+          mirror_preview?: boolean
+          preferred_countries?: string[]
+          similar_interests?: boolean
+          theme?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_preferences_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      admin_list_users: {
+        Args: { _q: string }
+        Returns: {
+          banned_until: string
+          block_count: number
+          country_code: string
+          created_at: string
+          display_name: string
+          id: string
+          is_banned: boolean
+          report_count: number
+        }[]
+      }
+      admin_metrics: { Args: never; Returns: Json }
+      block_user: { Args: { _target: string }; Returns: undefined }
+      delete_my_account: { Args: never; Returns: undefined }
+      find_or_create_match: { Args: never; Returns: Json }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      is_active_connection_member: {
+        Args: { _conn: string; _uid: string }
+        Returns: boolean
+      }
+      is_staff: { Args: { _user_id: string }; Returns: boolean }
+      join_match_queue: {
+        Args: { _mode: string; _snapshot?: Json }
+        Returns: undefined
+      }
+      leave_match_queue: { Args: never; Returns: undefined }
+      moderate_user: {
+        Args: {
+          _action: string
+          _reason: string
+          _report?: string
+          _target: string
+        }
+        Returns: undefined
+      }
+      remove_connection: { Args: { _conn: string }; Returns: undefined }
+      session_transition: {
+        Args: { _reason?: string; _session: string; _to: string }
+        Returns: undefined
+      }
+      set_mutual_connection_decision: {
+        Args: { _accept: boolean; _session: string }
+        Returns: string
+      }
+      submit_report: {
+        Args: {
+          _block: boolean
+          _category: string
+          _note: string
+          _reported: string
+          _session: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "moderator" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +799,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "moderator", "user"],
+    },
   },
 } as const
