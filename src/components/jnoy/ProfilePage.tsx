@@ -18,7 +18,7 @@ export function ProfilePage({ user, profile, prefs, detectedCountry, refresh, no
   useEffect(() => { supabase.from('policy_acceptances').select('policy_type,policy_version,accepted_at,source').eq('user_id', user.id).order('accepted_at', { ascending: false }).then(({ data }) => setConsents(data || [])); }, [user.id]);
   const exportFn = useServerFn(exportMyData);
   const doExport = async () => {
-    try { const d = await exportFn(); const url = URL.createObjectURL(new Blob([JSON.stringify(d, null, 2)], { type: 'application/json' })); const a = document.createElement('a'); a.href = url; a.download = 'jnoy-my-data.json'; a.click(); URL.revokeObjectURL(url); }
+    try { const d = await exportFn(); const url = URL.createObjectURL(new Blob([d], { type: 'application/json' })); const a = document.createElement('a'); a.href = url; a.download = 'jnoy-my-data.json'; a.click(); URL.revokeObjectURL(url); }
     catch { notify('Could not export right now. Please try again.'); }
   };
   const doDelete = async () => {

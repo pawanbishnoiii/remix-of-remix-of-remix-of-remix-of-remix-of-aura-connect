@@ -62,5 +62,5 @@ export const exportMyData = createServerFn({ method: 'POST' })
       sb.from('user_blocks').select('blocked_id,created_at').eq('blocker_id', uid),
       sb.from('login_visits').select('started_at,ended_at,country_code,region,city,district,device_name').eq('user_id', uid).limit(500),
     ]);
-    return { exported_at: new Date().toISOString(), profile: profile.data, preferences: prefs.data, consents: consents.data, sessions: sessions.data, reports_filed: reports.data, blocks: blocks.data, login_visits: visits.data };
+    return JSON.stringify({ exported_at: new Date().toISOString(), profile: profile.data, preferences: prefs.data, consents: consents.data, sessions: sessions.data, reports_filed: reports.data, blocks: blocks.data, login_visits: visits.data }, null, 2);
   });
