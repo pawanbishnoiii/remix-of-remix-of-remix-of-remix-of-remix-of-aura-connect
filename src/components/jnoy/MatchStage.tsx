@@ -21,8 +21,8 @@ export function MatchStage({ user, profile, prefs, autoStart, onAutoStarted, onS
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [countries, setCountries] = useState<string[]>(prefs?.preferred_countries?.length ? prefs.preferred_countries : ['IN']);
-  const [language, setLanguage] = useState(prefs?.languages?.[0] || 'English');
-  const [similar, setSimilar] = useState(prefs?.similar_interests ?? true);
+  const [language] = useState(prefs?.languages?.[0] || 'English');
+  const [similar] = useState(prefs?.similar_interests ?? true);
   const [tags, setTags] = useState<string[]>(profile.tags || []);
   const [showCountries, setShowCountries] = useState(false);
   const [autoNext, setAutoNext] = useState(prefs?.auto_next ?? true);
