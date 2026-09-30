@@ -15,7 +15,7 @@ function Reports() {
     if (filter === 'open') q = q.in('status', ['open', 'reviewing']);
     const { data } = await q; setRows(data || []);
     const paths = (data || []).map(r => r.screenshot_path).filter((p): p is string => !!p);
-    if (paths.length) { const { data: urls } = await supabase.storage.from('report-evidence').createSignedUrls(paths, 600); setShots(Object.fromEntries((urls || []).filter(u => u.signedUrl).map(u => [u.path!, u.signedUrl]))); }
+    if (paths.length) { const { data: urls } = await supabase.storage.from('report-evidence').createSignedUrls(paths, 600); setShots(Object.fromEntries((urls || []).filter(u => u.signedUrl).map(u => [u.path as string, u.signedUrl as string]))); }
   };
   useEffect(() => { void load(); }, [filter]);
   const act = async (r: R, action: string) => {
