@@ -6,7 +6,7 @@ import { VideoStage } from './VideoStage';
 import { CountryPicker } from './CountryPicker';
 import { TagPicker } from './TagPicker';
 import { Brand } from './Brand';
-import { LANGUAGES, countryFlag, countryLabel, type Mode, type Prefs, type Profile, type Session } from '@/lib/jnoy';
+import { countryFlag, countryLabel, type Mode, type Prefs, type Profile, type Session } from '@/lib/jnoy';
 import { searchStore } from '@/lib/search';
 import { isMobileDevice } from '@/lib/device';
 import clayCamera from '@/assets/clay-camera.webp';

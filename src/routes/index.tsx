@@ -44,6 +44,8 @@ function Home() {
   const [skipOnboarding, setSkipOnboarding] = useState(false);
   const [section, setSection] = useState<Section>('discover');
   const [authOpen, setAuthOpen] = useState(false);
+  const [authSignup, setAuthSignup] = useState(true);
+  const openAuth = (signup: boolean) => { setAuthSignup(signup); setAuthOpen(true); };
   const [active, setActive] = useState<Session | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [toast, setToast] = useState('');
@@ -106,7 +108,7 @@ function Home() {
     return () => { gone = true; clearInterval(hb); if (visitId) void recordActivity({ data: { visitId, end: true } }); };
   }, [user?.id]);
 
-  const go = (s: Section) => { if (!user) { setAuthOpen(true); return; } setSection(s); };
+  const go = (s: Section) => { if (!user) { openAuth(false); return; } setSection(s); };
   const startFromAnywhere = () => { setSection('discover'); };
   useEffect(() => { try { setSkipOnboarding(sessionStorage.getItem('jnoy_onb_skip') === '1'); } catch { /* ignore */ } }, [user?.id]);
   const needsOnboarding = !!user && loaded && !profile?.onboarding_completed && !skipOnboarding;
@@ -117,14 +119,10 @@ function Home() {
   return <div className={`app-shell ${user ? 'jn-member' : ''}`}>
     {!inCall && <header className="site-header"><div className="header-inner">
       <Brand light/>
-      {user && !needsOnboarding && <nav className="header-links">
-        <button onClick={() => go('discover')} className={section === 'discover' ? 'selected' : ''}>Discover</button>
-        <button onClick={() => go('profile')} className={section === 'profile' ? 'selected' : ''}>Profile</button>
-        {isAdmin && <Link to="/admin" className="jn-admin-link"><Shield size={14}/> Admin</Link>}
-      </nav>}
+      {user && !needsOnboarding && isAdmin && <nav className="header-links"><Link to="/admin" className="jn-admin-link"><Shield size={14}/> Admin</Link></nav>}
       <div className="header-actions">
         {!user && <span className="online-pill"><span className="live-dot"/> 18+ · Free · Worldwide</span>}
-        <button className="header-account" onClick={() => (user ? go('profile') : setAuthOpen(true))}>
+        <button className="header-account" onClick={() => (user ? go(section === 'profile' ? 'discover' : 'profile') : openAuth(false))}>
           {user ? (profile?.avatar_url ? <img src={profile.avatar_url} alt="" className="jn-head-avatar" referrerPolicy="no-referrer"/> : (profile?.display_name?.[0] || user.email?.[0] || 'J').toUpperCase()) : <>Sign in <ArrowUpRight size={15}/></>}
         </button>
       </div>
@@ -132,7 +130,7 @@ function Home() {
 
     <main>
       {!ready || (user && !loaded) ? <div className="jn-loading"><div className="search-rings"><span/><span/><span/></div><p>Finding your place in the world…</p></div>
-        : !user ? <><Hero onStart={() => setAuthOpen(true)}/><GuestPreview onStart={() => setAuthOpen(true)}/><HowItWorks/><BottomCta onStart={() => setAuthOpen(true)}/></>
+        : !user ? <><Hero onStart={() => openAuth(true)}/><GuestPreview onStart={() => openAuth(true)}/><HowItWorks/><BottomCta onStart={() => openAuth(true)}/></>
         : needsOnboarding ? <Onboarding user={user} profile={profile} prefs={prefs} detectedCountry={detectedCountry ?? profile?.detected_country ?? null} notify={notify} onSkip={skip} onDone={async () => { await refresh(); setSection('discover'); }}/>
         : inCall ? <CallRoom key={active!.id} session={active!} user={user} notify={notify} autoNext={prefs?.auto_next ?? true} onClose={() => { setAutoStart(false); setActive(null); setSection('discover'); }} onNext={() => { setActive(null); setSection('discover'); setAutoStart(true); }}/>
         : section === 'messages' ? <Messages user={user} notify={notify} onMeet={() => setSection('discover')}/>
@@ -141,8 +139,8 @@ function Home() {
     </main>
 
     {!user && ready && <SiteFooter/>}
-    {!user && ready && <button className="mobile-match-cta" onClick={() => setAuthOpen(true)}>Continue with Google</button>}
-    <AnimatePresence>{authOpen && <AuthModal onClose={() => setAuthOpen(false)} notify={notify}/>}</AnimatePresence>
+    {!user && ready && <button className="mobile-match-cta" onClick={() => openAuth(true)}>Continue with Google</button>}
+    <AnimatePresence>{authOpen && <AuthModal initialSignup={authSignup} onClose={() => setAuthOpen(false)} notify={notify}/>}</AnimatePresence>
     {toast && <div className="toast" role="status">{toast}<button onClick={() => setToast('')} aria-label="Dismiss"><X size={15}/></button></div>}
   </div>;
 }
