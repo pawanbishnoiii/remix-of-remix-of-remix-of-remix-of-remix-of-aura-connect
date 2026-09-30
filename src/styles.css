@@ -405,7 +405,7 @@ html,body{overflow-x:hidden}
   .jn-member .jn-stage{display:flex;flex-direction:column;height:100dvh;min-height:100dvh;padding:64px 10px calc(10px + env(safe-area-inset-bottom))}
   .jn-member .jn-stage-top{display:none}
   .jn-member .jn-stage-main{flex:1;min-height:0}
-  .jn-member .jn-video-big{flex:1;min-height:0;height:auto}
+  .jn-member .jn-video-big{flex:1 1 auto;min-height:0!important;height:auto!important}
   .jn-member .jn-chat-panel{display:none}
   .jn-member .jn-stage-bar{position:static;margin-top:0}
   .jn-dm .messages-layout.has-chat .connection-list{display:none}
