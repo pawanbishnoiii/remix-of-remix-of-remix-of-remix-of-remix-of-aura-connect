@@ -27,7 +27,7 @@ async function pollOnce() {
     if (s) { state.searching = false; state.matched = s; clearTimer(); emit(); return; }
   }
   if (r?.status === 'idle' && request) queue(request.mode, request.snapshot);
-  timer = setTimeout(() => { void pollOnce(); }, 1500);
+  timer = setTimeout(() => { void pollOnce(); }, 800);
 }
 
 // Module-level store so a running search survives navigating between
@@ -49,8 +49,8 @@ export const searchStore = {
     state.began = Date.now();
     request = req;
     emit();
-    queue(req.mode, req.snapshot);
-    void pollOnce();
+    const id = runId;
+    void (async () => { try { await supabase.rpc('join_match_queue', { _mode: req.mode, _snapshot: req.snapshot }); } catch { /* retried by poll */ } if (id === runId) void pollOnce(); })();
   },
   stop() {
     runId++;
