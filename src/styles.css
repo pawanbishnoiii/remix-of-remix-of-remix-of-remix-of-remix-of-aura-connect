@@ -312,3 +312,60 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{ou
 @media (max-height:600px) and (max-width:900px){.jn-video-big{height:clamp(160px,36dvh,300px)!important}.jn-clay-icon{width:52px;height:52px}}
 @media (orientation:landscape) and (max-height:500px){.jn-stage{padding-bottom:76px}.jn-video-big{height:52dvh!important}.jn-stage-top{padding-bottom:4px}}
 html,body{overflow-x:hidden}
+
+/* Member workspace refinements */
+.jn-profile-main{display:grid;gap:18px;align-content:start;min-width:0}
+.jn-privacy-card{padding-top:24px}
+.jn-privacy-card .jn-row{align-items:stretch}
+.jn-privacy-card .preview-activate{margin-top:4px;background:var(--lavender);border-color:var(--purple);color:var(--ink);min-height:44px;font-size:.85rem;justify-content:center;white-space:normal}
+.jn-privacy-card .preview-activate.jn-danger{background:var(--lavender)}
+.jn-report{width:min(100%,530px);max-height:min(90dvh,780px);overflow-y:auto;color:var(--ink)}
+.jn-report h2,.jn-report p,.jn-report label,.jn-report textarea{color:var(--ink)}
+.jn-report h2{display:flex;gap:9px;align-items:center;padding-right:28px}
+.jn-report p{line-height:1.55}
+.jn-report-list{grid-template-columns:1fr 1fr}
+.jn-report-list button{min-height:44px;color:var(--ink)}
+.jn-report-list button.on{border-color:var(--purple);background:var(--lavender)}
+.jn-report textarea{width:100%;resize:vertical;min-height:80px;padding:12px;border:1px solid var(--lavender);border-radius:8px;background:var(--lavender)}
+.jn-report .full-primary.jn-danger{color:var(--ink)!important;background:var(--coral);margin-top:12px}
+.jn-typing{align-self:flex-start;font-size:.8rem;color:var(--muted-ink);padding:4px 8px;min-height:24px}
+.jn-cpick{min-width:0}
+.jn-csearch{min-width:0}.jn-csearch input{min-width:0;width:100%}
+.jn-clist{grid-template-columns:repeat(2,minmax(0,1fr));max-height:230px}
+.jn-clist button{min-width:0;overflow-wrap:anywhere}
+.jn-clist button span{flex:none;font-size:1.1rem}
+.jn-filters{width:min(100%,540px);padding:28px;color:var(--ink)}
+.jn-filters h2{margin-bottom:6px}.jn-filters>p{color:var(--muted-ink)}
+.jn-filters .jn-sub{margin-top:22px}
+@media(max-width:900px){
+  .jn-member .site-header{display:block}
+  .jn-member .header-inner{padding:11px 16px;gap:12px;min-height:58px}
+  .jn-member .header-links{display:flex;gap:16px;margin-left:auto;margin-right:0}
+  .jn-member .header-actions{margin-left:0}
+  .jn-member .brand{font-size:26px}
+  .jn-member .brand-mark{width:29px;height:29px}
+  .jn-stage{padding:14px 14px calc(24px + env(safe-area-inset-bottom));gap:12px}
+  .jn-stage-top{display:none}
+  .jn-video-big{height:clamp(230px,42dvh,420px)!important;border-radius:12px}
+  .jn-stage-bar{position:static;box-shadow:none;border-radius:12px;margin-top:0;padding:12px;gap:10px}
+  .jn-stage-main{gap:10px}
+  .jn-stage .mode-options{margin:0}
+  .jn-stage .mode-options button{justify-content:center;white-space:normal;min-width:0;padding:10px 6px}
+  .jn-stage .jn-start-row{width:100%}
+  .jn-stage .jn-filter-btn{min-width:52px}
+  .jn-stage .jn-start{min-width:0}
+  .search-overlay h3{font-size:1.2rem;margin-bottom:3px}
+  .search-overlay p{font-size:.85rem;line-height:1.45}
+  .interior-page{padding-bottom:calc(24px + env(safe-area-inset-bottom))}
+}
+@media(max-width:640px){
+  .jn-report-list{grid-template-columns:1fr}
+  .jn-report,.jn-filters{padding:22px 18px}
+  .jn-clist{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .jn-filters .two-col{grid-template-columns:1fr}
+  .jn-profile-main{gap:12px}
+  .jn-privacy-card .jn-row{display:grid;grid-template-columns:1fr}
+  .jn-member .header-inner{padding:10px 14px}
+  .jn-member .header-links button{font-size:12px}
+  .jn-member .header-account{padding:8px 11px}
+}
