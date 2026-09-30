@@ -14,6 +14,55 @@ export type Database = {
   }
   public: {
     Tables: {
+      call_signals: {
+        Row: {
+          created_at: string
+          id: string
+          payload: Json
+          recipient_id: string
+          sender_id: string
+          session_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          payload: Json
+          recipient_id: string
+          sender_id: string
+          session_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          payload?: Json
+          recipient_id?: string
+          sender_id?: string
+          session_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "call_signals_recipient_id_fkey"
+            columns: ["recipient_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "call_signals_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "call_signals_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "conversation_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       conversation_sessions: {
         Row: {
           connected_at: string | null
@@ -122,10 +171,52 @@ export type Database = {
           },
         ]
       }
+      login_visits: {
+        Row: {
+          country_code: string | null
+          ended_at: string | null
+          id: string
+          ip_address: unknown
+          last_seen_at: string
+          started_at: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          country_code?: string | null
+          ended_at?: string | null
+          id?: string
+          ip_address?: unknown
+          last_seen_at?: string
+          started_at?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          country_code?: string | null
+          ended_at?: string | null
+          id?: string
+          ip_address?: unknown
+          last_seen_at?: string
+          started_at?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "login_visits_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       match_queue: {
         Row: {
           desired_mode: string
           expires_at: string
+          generation: string
           heartbeat_at: string
           preference_snapshot: Json
           queued_at: string
@@ -136,6 +227,7 @@ export type Database = {
         Insert: {
           desired_mode: string
           expires_at?: string
+          generation?: string
           heartbeat_at?: string
           preference_snapshot?: Json
           queued_at?: string
@@ -146,6 +238,7 @@ export type Database = {
         Update: {
           desired_mode?: string
           expires_at?: string
+          generation?: string
           heartbeat_at?: string
           preference_snapshot?: Json
           queued_at?: string
@@ -438,6 +531,45 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "session_events_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "conversation_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      session_messages: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          sender_id: string
+          session_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          sender_id: string
+          session_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          sender_id?: string
+          session_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "session_messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "session_messages_session_id_fkey"
             columns: ["session_id"]
             isOneToOne: false
             referencedRelation: "conversation_sessions"

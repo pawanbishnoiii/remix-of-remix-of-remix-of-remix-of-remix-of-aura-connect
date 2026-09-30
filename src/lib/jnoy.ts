@@ -1,0 +1,8 @@
+import { z } from 'zod';
+
+export const COUNTRIES = [{ code: 'IN', label: 'India', flag: '🇮🇳' }, { code: 'US', label: 'United States', flag: '🇺🇸' }, { code: 'GB', label: 'United Kingdom', flag: '🇬🇧' }, { code: 'CA', label: 'Canada', flag: '🇨🇦' }, { code: 'AU', label: 'Australia', flag: '🇦🇺' }, { code: 'DE', label: 'Germany', flag: '🇩🇪' }, { code: 'FR', label: 'France', flag: '🇫🇷' }, { code: 'JP', label: 'Japan', flag: '🇯🇵' }, { code: 'BR', label: 'Brazil', flag: '🇧🇷' }, { code: 'AE', label: 'UAE', flag: '🇦🇪' }];
+export const INTERESTS = ['Travel', 'Music', 'Art', 'Food', 'Books', 'Gaming', 'Culture', 'Movies', 'Nature', 'Design', 'Photography', 'Language'];
+export const authSchema = z.object({ email: z.string().trim().email().max(255), password: z.string().min(8).max(128) });
+export const profileSchema = z.object({ display_name: z.string().trim().min(2).max(40), country_code: z.string().length(2), tags: z.array(z.string().max(30)).max(12) });
+export const messageSchema = z.string().trim().min(1).max(2000).refine(v => !/(\+?\d[^\d]{0,3}){7,}|whatsapp|telegram|signal\.me|t\.me|instagram|snapchat|@[a-z0-9_]{3,}|[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/i.test(v.replace(/０/g,'0').replace(/１/g,'1').replace(/２/g,'2').replace(/３/g,'3').replace(/４/g,'4').replace(/５/g,'5').replace(/６/g,'6').replace(/７/g,'7').replace(/８/g,'8').replace(/９/g,'9').replace(/\b(zero|oh|one|two|three|four|five|six|seven|eight|nine|shunya|ek|do|teen|char|panch|chhe|saat|aath|nau)\b/gi,'0')), 'Contact details cannot be shared here');
+export const countryLabel = (code?: string | null) => COUNTRIES.find(c => c.code === code)?.label ?? 'Worldwide';
