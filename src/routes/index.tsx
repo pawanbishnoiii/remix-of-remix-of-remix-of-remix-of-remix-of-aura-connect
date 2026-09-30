@@ -34,6 +34,7 @@ function Home() {
   const [active, setActive] = useState<Session | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [toast, setToast] = useState('');
+  const [autoStart, setAutoStart] = useState(false);
   const notify = (v: string) => { setToast(v); setTimeout(() => setToast(''), 5000); };
 
   useEffect(() => {
@@ -44,12 +45,12 @@ function Home() {
   useEffect(() => {
     if (!user) { setProfile(null); setPrefs(null); setIsAdmin(false); setActive(null); return; }
     let canceled = false;
-    Promise.all([
+    supabase.rpc('ensure_my_profile').then(() => Promise.all([
       supabase.from('profiles').select('*').eq('id', user.id).maybeSingle(),
       supabase.from('user_preferences').select('*').eq('user_id', user.id).maybeSingle(),
       supabase.rpc('is_staff', { _user_id: user.id }),
       supabase.from('conversation_sessions').select('*').or(`user_a_id.eq.${user.id},user_b_id.eq.${user.id}`).in('status', ['created', 'connecting', 'connected']).order('created_at', { ascending: false }).limit(1),
-    ]).then(([p, pref, role, sessions]) => { if (!canceled) { setProfile(p.data); setPrefs(pref.data); setIsAdmin(!!role.data); if (sessions.data?.[0]) setActive(sessions.data[0]); } });
+    ])).then(([p, pref, role, sessions]) => { if (!canceled) { setProfile(p.data); setPrefs(pref.data); setIsAdmin(!!role.data); if (sessions.data?.[0]) setActive(sessions.data[0]); if (p.data && !p.data.onboarding_completed) setSection('profile'); } });
     return () => { canceled = true; };
   }, [user]);
   useEffect(() => {
@@ -69,7 +70,7 @@ function Home() {
 
   return <div className="app-shell">
     <header className="site-header"><div className="header-inner"><Brand light/><nav className="header-links"><button onClick={() => go('discover')} className={section === 'discover' ? 'selected' : ''}>Discover</button><button onClick={() => go('messages')} className={section === 'messages' ? 'selected' : ''}>Messages</button><button onClick={() => go('profile')} className={section === 'profile' ? 'selected' : ''}>My profile</button>{isAdmin && <button onClick={() => go('admin')} className={section === 'admin' ? 'selected' : ''}>Admin</button>}</nav><div className="header-actions"><span className="online-pill"><span className="live-dot"/> Meaningful connections start here</span><button className="header-account" onClick={() => user ? go('profile') : setAuthOpen(true)}>{user ? (profile?.display_name?.[0] || user.email?.[0] || 'J').toUpperCase() : 'Sign in'} {!user && <ArrowUpRight size={15}/>}</button></div></div></header>
-    <main>{active && user ? <CallRoom key={active.id} session={active} user={user} onClose={() => { setActive(null); setSection('discover'); }} onNext={() => { setActive(null); setSection('discover'); }} notify={notify}/> : section === 'discover' ? <Discover user={user} profile={profile} prefs={prefs} onAuth={() => setAuthOpen(true)} onSession={setActive} onProfile={() => go('profile')} notify={notify}/> : section === 'messages' && user ? <Messages user={user} notify={notify}/> : section === 'profile' && user ? <ProfilePage user={user} profile={profile} prefs={prefs} detectedCountry={detectedCountry} refresh={refresh} notify={notify}/> : section === 'admin' && user && isAdmin ? <AdminPage notify={notify}/> : null}</main>
+    <main>{active && user ? <CallRoom key={active.id} session={active} user={user} onClose={() => { setAutoStart(false); setActive(null); setSection('discover'); }} onNext={() => { setAutoStart(true); setActive(null); setSection('discover'); }} notify={notify}/> : section === 'discover' ? <Discover user={user} profile={profile} prefs={prefs} detectedCountry={detectedCountry} autoStart={autoStart} onAutoStarted={() => setAutoStart(false)} onAuth={() => setAuthOpen(true)} onSession={setActive} onProfile={() => go('profile')} notify={notify}/> : section === 'messages' && user ? <Messages user={user} notify={notify}/> : section === 'profile' && user ? <ProfilePage user={user} profile={profile} prefs={prefs} detectedCountry={detectedCountry} refresh={refresh} notify={notify}/> : section === 'admin' && user && isAdmin ? <AdminPage notify={notify}/> : null}</main>
     {!active && <footer className="site-footer"><div><Brand light/><p>Real conversations. Unexpected connections.<br/>A little closer to everywhere.</p></div><div className="footer-side"><span>Made for curious people, everywhere.</span><span>18+ only · Be kind · Stay safe</span></div></footer>}
     {!active && <nav className="mobile-nav"><button className={section==='discover'?'active':''} onClick={() => go('discover')}><Compass size={22}/>Discover</button><button className={section==='messages'?'active':''} onClick={() => go('messages')}><MessageCircle size={22}/>Messages</button><button className={section==='profile'?'active':''} onClick={() => go('profile')}><span className="nav-avatar">{profile?.display_name?.[0] || 'J'}</span>Profile</button></nav>}
     <AnimatePresence>{authOpen && <AuthModal onClose={() => setAuthOpen(false)} notify={notify}/>}</AnimatePresence>
