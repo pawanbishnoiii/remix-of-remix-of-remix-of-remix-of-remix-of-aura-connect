@@ -82,13 +82,13 @@ export function MatchStage({ user, profile, prefs, autoStart, onAutoStarted, onS
     <div className="jn-stage-top"><Brand/><span className={`jn-status ${searching ? 'live' : ''}`}><span className="live-dot"/> {status}</span></div>
     <div className="jn-stage-main">
       <div className="jn-video-big">
-        {mode === 'text' ? <Empty img={clayChat} title="Words make worlds." text="Text-only mode — no camera needed."/>
+        {!searching && (mode === 'text' ? <Empty img={clayChat} title="Words make worlds." text="Text-only mode — no camera needed."/>
           : cam === 'ready' && stream && mode === 'video' ? <VideoStage stream={stream} label="Your camera · only you see this"/>
           : cam === 'ready' && mode === 'audio' ? <Empty img={clayMic} title="Microphone ready" text="Voice-only chat. Your camera stays off."/>
           : cam === 'denied' ? <Empty img={mode === 'audio' ? clayMic : clayCamera} title="Access was blocked" text="Allow camera & microphone from the lock icon in your address bar, or switch to Text.">
               <div className="jn-row"><button className="preview-activate" onClick={() => void requestMedia()}>Try again</button><button className="preview-activate" onClick={() => setMode('text')}>Use text chat</button></div></Empty>
           : <Empty img={mode === 'audio' ? clayMic : clayCamera} title={cam === 'requesting' ? 'Waiting for permission…' : mode === 'audio' ? 'Microphone is off' : 'Camera is off'} text="Nothing is shared until you connect.">
-              {cam !== 'requesting' && <button className="preview-activate" onClick={() => void requestMedia()}><Camera size={16}/> Enable {mode === 'audio' ? 'microphone' : 'camera & mic'}</button>}</Empty>}
+              {cam !== 'requesting' && <button className="preview-activate" onClick={() => void requestMedia()}><Camera size={16}/> Enable {mode === 'audio' ? 'microphone' : 'camera & mic'}</button>}</Empty>)}
         {searching && <div className="search-overlay"><div className="search-rings"><span/><span/><span/><Globe2 size={34}/></div><h3>Finding someone for you…</h3><p>{scope}</p><small className="jn-wait">{waited}s</small></div>}
       </div>
       <div className="jn-stage-bar">
