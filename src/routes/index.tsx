@@ -2,7 +2,7 @@ import { createFileRoute, Link } from '@tanstack/react-router';
 import { useEffect, useState } from 'react';
 import type { User } from '@supabase/supabase-js';
 import { AnimatePresence } from 'motion/react';
-import { ArrowUpRight, Compass, MessageCircle, Shield, X } from 'lucide-react';
+import { ArrowUpRight, Shield, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Brand } from '@/components/jnoy/Brand';
 import { AuthModal } from '@/components/jnoy/AuthModal';
@@ -127,7 +127,7 @@ function Home() {
         : inCall ? <CallRoom key={active!.id} session={active!} user={user} notify={notify} onClose={() => { setAutoStart(false); setActive(null); setSection('discover'); }} onNext={() => { setActive(null); setSection('discover'); setAutoStart(true); }}/>
         : section === 'messages' ? <Messages user={user} notify={notify} onMeet={() => setSection('discover')}/>
         : section === 'profile' ? <ProfilePage user={user} profile={profile} prefs={prefs} detectedCountry={detectedCountry ?? profile?.detected_country ?? null} refresh={refresh} notify={notify} onStart={startFromAnywhere}/>
-        : profile ? <MatchStage user={user} profile={profile} prefs={prefs} autoStart={autoStart} onAutoStarted={() => setAutoStart(false)} onSession={setActive} notify={notify} onNeedProfile={() => setSection('profile')} refresh={refresh}/> : null}
+        : profile ? <MatchStage user={user} profile={profile} prefs={prefs} autoStart={autoStart} onAutoStarted={() => setAutoStart(false)} onSession={setActive} notify={notify} onNeedProfile={() => setSection('profile')} onMessages={() => setSection('messages')} refresh={refresh}/> : null}
     </main>
 
     {!user && ready && <SiteFooter/>}
