@@ -5,4 +5,7 @@
 - [x] Hide Messages navigation and remove phone bottom navigation.
 - [x] Improve country selection and member phone matching layout.
 - [ ] Verify two-user chat and call flows (requires two active test accounts).
-- [x] Make matching persist across navigation with auto re-match and an auto-match filter toggle (default on).
+- [x] Make matching persist across navigation with auto re-match and an auto-match filter toggle (default on).- [x] Sign in opens the login card; transparent top bar without Discover/Profile; full-screen phone stage.
+- [x] Filters: India default, countries behind a button, tags instead of "How you talk", no widen switch.
+- [x] Faster matching, nearby (district/city/state) priority, ~1/30 repeat chance after Next.
+- [x] Messages: first-message chime, seen, timestamps, search, phone back button.
