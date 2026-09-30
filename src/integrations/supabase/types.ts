@@ -197,6 +197,7 @@ export type Database = {
           city: string | null
           country_code: string | null
           device_name: string | null
+          district: string | null
           ended_at: string | null
           id: string
           ip_address: unknown
@@ -211,6 +212,7 @@ export type Database = {
           city?: string | null
           country_code?: string | null
           device_name?: string | null
+          district?: string | null
           ended_at?: string | null
           id?: string
           ip_address?: unknown
@@ -225,6 +227,7 @@ export type Database = {
           city?: string | null
           country_code?: string | null
           device_name?: string | null
+          district?: string | null
           ended_at?: string | null
           id?: string
           ip_address?: unknown
@@ -398,6 +401,7 @@ export type Database = {
           id: string
           policy_type: string
           policy_version: string
+          source: string
           user_id: string
         }
         Insert: {
@@ -405,6 +409,7 @@ export type Database = {
           id?: string
           policy_type: string
           policy_version: string
+          source?: string
           user_id: string
         }
         Update: {
@@ -412,6 +417,7 @@ export type Database = {
           id?: string
           policy_type?: string
           policy_version?: string
+          source?: string
           user_id?: string
         }
         Relationships: [
@@ -435,6 +441,7 @@ export type Database = {
           created_at: string
           detected_city: string | null
           detected_country: string | null
+          detected_district: string | null
           detected_region: string | null
           device_name: string | null
           display_name: string | null
@@ -448,6 +455,7 @@ export type Database = {
           last_name: string | null
           last_seen_at: string | null
           onboarding_completed: boolean
+          onboarding_seen_at: string | null
           pronouns: string | null
           tags: string[]
           terms_accepted_at: string | null
@@ -463,6 +471,7 @@ export type Database = {
           created_at?: string
           detected_city?: string | null
           detected_country?: string | null
+          detected_district?: string | null
           detected_region?: string | null
           device_name?: string | null
           display_name?: string | null
@@ -476,6 +485,7 @@ export type Database = {
           last_name?: string | null
           last_seen_at?: string | null
           onboarding_completed?: boolean
+          onboarding_seen_at?: string | null
           pronouns?: string | null
           tags?: string[]
           terms_accepted_at?: string | null
@@ -491,6 +501,7 @@ export type Database = {
           created_at?: string
           detected_city?: string | null
           detected_country?: string | null
+          detected_district?: string | null
           detected_region?: string | null
           device_name?: string | null
           display_name?: string | null
@@ -504,6 +515,7 @@ export type Database = {
           last_name?: string | null
           last_seen_at?: string | null
           onboarding_completed?: boolean
+          onboarding_seen_at?: string | null
           pronouns?: string | null
           tags?: string[]
           terms_accepted_at?: string | null
@@ -864,6 +876,15 @@ export type Database = {
           sender_name: string
         }[]
       }
+      admin_user_consents: {
+        Args: { _user: string }
+        Returns: {
+          accepted_at: string
+          policy_type: string
+          policy_version: string
+          source: string
+        }[]
+      }
       admin_user_sessions: {
         Args: { _user: string }
         Returns: {
@@ -925,6 +946,7 @@ export type Database = {
         Returns: undefined
       }
       leave_match_queue: { Args: never; Returns: undefined }
+      mark_onboarding_seen: { Args: never; Returns: undefined }
       moderate_user: {
         Args: {
           _action: string
@@ -932,6 +954,10 @@ export type Database = {
           _report?: string
           _target: string
         }
+        Returns: undefined
+      }
+      record_policy_acceptance: {
+        Args: { _source: string; _uid: string }
         Returns: undefined
       }
       remove_connection: { Args: { _conn: string }; Returns: undefined }

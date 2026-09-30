@@ -12,6 +12,16 @@ const FIELDS: Field[] = [
   { key: 'matching', field: 'same_device_only', label: 'Match phones with phones, computers with computers', type: 'bool' },
   { key: 'safety', field: 'block_contact_sharing', label: 'Block phone numbers & contact details in chat', type: 'bool' },
   { key: 'safety', field: 'report_screenshots', label: 'Save a video snapshot when someone reports', type: 'bool' },
+  { key: 'matching', field: 'queue_timeout_seconds', label: 'Drop idle searchers from the queue after (seconds)', type: 'number' },
+  { key: 'matching', field: 'video_enabled', label: 'Allow video chat', type: 'bool' },
+  { key: 'matching', field: 'audio_enabled', label: 'Allow voice chat', type: 'bool' },
+  { key: 'matching', field: 'text_enabled', label: 'Allow text chat', type: 'bool' },
+  { key: 'safety', field: 'auto_suspend_reports', label: 'Auto-suspend after this many open reports (0 = off)', type: 'number' },
+  { key: 'safety', field: 'dm_per_minute', label: 'Max direct messages per minute per user', type: 'number' },
+  { key: 'safety', field: 'min_age', label: 'Minimum age', type: 'number' },
+  { key: 'signup', field: 'open', label: 'Allow new sign-ups', type: 'bool' },
+  { key: 'signup', field: 'google_only', label: 'Promote Google as the only sign-in option', type: 'bool' },
+  { key: 'announcement', field: 'text', label: 'Banner announcement for members', type: 'text' },
   { key: 'maintenance', field: 'enabled', label: 'Maintenance mode', type: 'bool' },
   { key: 'maintenance', field: 'message', label: 'Maintenance message', type: 'text' },
 ];
@@ -30,12 +40,12 @@ function SettingsPage() {
     setMsg('Settings saved. Matching uses them immediately.');
   };
   return <div><div className="jn-admin-head"><h1>Settings</h1><p>Platform-wide controls</p></div>
-    <div className="surface jn-settings">{FIELDS.map(f => { const v = vals[f.key]?.[f.field]; return <label key={f.key + f.field} className="jn-setting">
+    <div className="surface jn-settings">{FIELDS.map((f, i) => { const v = vals[f.key]?.[f.field]; return <div key={f.key + f.field}>{(i === 0 || FIELDS[i - 1]!.key !== f.key) && <h3 className="jn-sub">{f.key[0]!.toUpperCase() + f.key.slice(1)}</h3>}<label className="jn-setting">
       <span>{f.label}</span>
       {f.type === 'bool' ? <input type="checkbox" checked={!!v} onChange={e => set(f.key, f.field, e.target.checked)}/>
         : f.type === 'number' ? <input type="number" min={0} max={3600} value={typeof v === 'number' ? v : ''} onChange={e => set(f.key, f.field, Number(e.target.value))}/>
         : <input value={typeof v === 'string' ? v : ''} maxLength={200} onChange={e => set(f.key, f.field, e.target.value)}/>}
-    </label>; })}
+    </label></div>; })}
       <button className="full-primary" onClick={save}>Save settings</button>{msg && <p className="jn-muted">{msg}</p>}
     </div></div>;
 }

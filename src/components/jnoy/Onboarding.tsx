@@ -1,10 +1,9 @@
 import { useEffect, useState } from 'react';
 import type { User } from '@supabase/supabase-js';
 import { motion } from 'motion/react';
-import { ArrowRight, Check, Globe2, ShieldCheck } from 'lucide-react';
-import { Link } from '@tanstack/react-router';
+import { ArrowRight, Globe2, ShieldCheck } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { COUNTRIES, LANGUAGES, countryFlag, onboardingSchema, type Prefs, type Profile } from '@/lib/jnoy';
+import { COUNTRIES, LANGUAGES, countryFlag, countryLabel, onboardingSchema, type Prefs, type Profile } from '@/lib/jnoy';
 import { TagPicker } from './TagPicker';
 
 export type OnboardingValues = { first: string; last: string; gender: string; age: string; country: string; language: string; tags: string[] };
@@ -18,7 +17,7 @@ export function useProfileForm(user: User, profile: Profile | null, prefs: Prefs
       last: profile?.last_name || md['family_name'] || (md['full_name'] || '').split(' ').slice(1).join(' ') || '',
       gender: profile?.gender || '',
       age: profile?.age ? String(profile.age) : '',
-      country: profile?.country_code || detectedCountry || '',
+      country: profile?.country_code || '',
       language: prefs?.languages?.[0] || 'English',
       tags: profile?.tags || [],
     });
@@ -50,8 +49,9 @@ export function ProfileFields({ v, set, detectedCountry }: { v: OnboardingValues
       <label>Age *<input required type="number" inputMode="numeric" min={18} max={100} value={v.age} onChange={up('age')} placeholder="18+"/></label>
     </div>
     <div className="two-col">
-      <label>Country * {detectedCountry && <small><Globe2 size={12}/> detected {countryFlag(detectedCountry)}</small>}
+      <label>Country *
         <select required value={v.country} onChange={up('country')}><option value="">Choose your country</option>{COUNTRIES.map(c => <option key={c.code} value={c.code}>{c.flag} {c.label}</option>)}</select>
+        {detectedCountry && detectedCountry !== v.country && <small className="jn-suggest"><Globe2 size={12}/> Your network looks like {countryFlag(detectedCountry)} {countryLabel(detectedCountry)} <button type="button" onClick={() => set({ ...v, country: detectedCountry })}>Use it</button></small>}
       </label>
       <label>Language *<select required value={v.language} onChange={up('language')}>{LANGUAGES.map(l => <option key={l}>{l}</option>)}</select></label>
     </div>
@@ -60,15 +60,12 @@ export function ProfileFields({ v, set, detectedCountry }: { v: OnboardingValues
   </div>;
 }
 
-export function Onboarding({ user, profile, prefs, detectedCountry, onDone, notify }: { user: User; profile: Profile | null; prefs: Prefs | null; detectedCountry: string | null; onDone: () => void; notify: (s: string) => void }) {
+export function Onboarding({ user, profile, prefs, detectedCountry, onDone, onSkip, notify }: { user: User; profile: Profile | null; prefs: Prefs | null; detectedCountry: string | null; onDone: () => void; onSkip: () => void; notify: (s: string) => void }) {
   const [v, setV] = useProfileForm(user, profile, prefs, detectedCountry);
-  const [agree, setAgree] = useState(!!profile?.terms_accepted_at);
   const [busy, setBusy] = useState(false);
-  useEffect(() => { if (profile?.terms_accepted_at) setAgree(true); }, [profile?.terms_accepted_at]);
-  const complete = !!(v.first.trim() && v.last.trim() && v.gender && Number(v.age) >= 18 && v.country && v.language && agree);
+  const complete = !!(v.first.trim() && v.last.trim() && v.gender && Number(v.age) >= 18 && v.country && v.language);
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!agree) { notify('Please confirm you are 18+ and accept the policies.'); return; }
     setBusy(true);
     const err = await saveProfile(v);
     setBusy(false);
@@ -82,8 +79,8 @@ export function Onboarding({ user, profile, prefs, detectedCountry, onDone, noti
         <div><span className="section-kicker">ONE QUICK STEP</span><h1>Tell us a little <em>about you.</em></h1><p>Everything marked * is required. You only do this once.</p></div>
       </div>
       <ProfileFields v={v} set={setV} detectedCountry={detectedCountry}/>
-      {!profile?.terms_accepted_at && <label className={`jn-check ${agree ? 'on' : ''}`}><input type="checkbox" checked={agree} onChange={e => setAgree(e.target.checked)}/><span className="jn-box">{agree && <Check size={13}/>}</span><span>I’m 18+ and agree to the <Link to="/terms" target="_blank">Terms</Link>, <Link to="/privacy" target="_blank">Privacy Policy</Link> and <Link to="/guidelines" target="_blank">Guidelines</Link>.</span></label>}
       <button className="full-primary" disabled={busy || !complete}>{busy ? 'Saving…' : 'Finish & start meeting people'} <ArrowRight size={18}/></button>
+      <button type="button" className="subtle-action jn-center" onClick={onSkip}>Skip for now — I’ll finish later</button>
       <p className="jn-muted jn-center"><ShieldCheck size={14}/> Your last name is never shown to matches.</p>
     </motion.form>
   </div>;

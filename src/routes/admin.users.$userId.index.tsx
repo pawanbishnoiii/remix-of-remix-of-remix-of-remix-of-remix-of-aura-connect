@@ -15,6 +15,8 @@ function UserDetail() {
   const [sessions, setSessions] = useState<Fn['admin_user_sessions']['Returns']>([]);
   const [visits, setVisits] = useState<Fn['admin_user_visits']['Returns']>([]);
   const [msg, setMsg] = useState('');
+  const [consents, setConsents] = useState<Fn['admin_user_consents']['Returns']>([]);
+  useEffect(() => { supabase.rpc('admin_user_consents', { _user: userId }).then(({ data }) => setConsents(data || [])); }, [userId]);
   const load = async () => {
     const [a, b, c] = await Promise.all([supabase.rpc('admin_list_users_v2', { _q: userId }), supabase.rpc('admin_user_sessions', { _user: userId }), supabase.rpc('admin_user_visits', { _user: userId })]);
     setU(a.data?.[0] ?? null); setSessions(b.data || []); setVisits(c.data || []);
@@ -39,6 +41,10 @@ function UserDetail() {
     <h2 className="jn-h2">Sign-in history</h2>
     <div className="surface jn-table-wrap"><table className="jn-table"><thead><tr><th>Signed in</th><th>Duration</th><th>Location</th><th>IP</th><th>Device</th></tr></thead><tbody>
       {visits.map(v => <tr key={v.id}><td>{new Date(v.started_at).toLocaleString()}</td><td>{Math.max(0, Math.round((new Date(v.ended_at || v.last_seen_at).getTime() - new Date(v.started_at).getTime()) / 60000))} min{v.ended_at ? '' : ' (open)'}</td><td>{countryFlag(v.country_code)} {[v.city, v.region, countryLabel(v.country_code)].filter(Boolean).join(', ')}</td><td>{v.ip || '—'}</td><td>{v.device_name || '—'}</td></tr>)}
+    </tbody></table></div>
+    <h2 className="jn-sub">Consent history</h2>
+    <div className="surface jn-table-wrap"><table className="jn-table"><thead><tr><th>Policy</th><th>Version</th><th>Where</th><th>Accepted</th></tr></thead><tbody>
+      {consents.length ? consents.map(c => <tr key={c.policy_type + c.policy_version}><td>{c.policy_type}</td><td>{c.policy_version}</td><td>{c.source}</td><td>{new Date(c.accepted_at).toLocaleString()}</td></tr>) : <tr><td colSpan={4} className="jn-muted">No consent recorded.</td></tr>}
     </tbody></table></div>
   </div>;
 }
