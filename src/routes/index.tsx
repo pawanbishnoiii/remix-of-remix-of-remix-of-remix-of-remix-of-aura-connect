@@ -187,7 +187,7 @@ function CallRoom({ session, user, onClose, onNext, notify }: { session: Session
           if (!sender) return;
           const parameters = sender.getParameters();
           if (!parameters.encodings?.length) parameters.encodings = [{}];
-          parameters.encodings[0].maxBitrate = bitrate;
+          if (parameters.encodings[0]) parameters.encodings[0].maxBitrate = bitrate;
           try { await sender.setParameters(parameters); } catch { /* Browser may not support bitrate control. */ }
         }, 6000);
         await checkSignals(); timer = setInterval(() => void checkSignals(), 1200);
