@@ -8,6 +8,7 @@ import type { Database, Json } from '@/integrations/supabase/types';
 import { Brand } from '@/components/jnoy/Brand';
 import { VideoStage } from '@/components/jnoy/VideoStage';
 import { COUNTRIES, INTERESTS, authSchema, countryLabel, messageSchema, profileSchema } from '@/lib/jnoy';
+import { recordActivity } from '@/lib/activity.functions';
 import world from '@/assets/jnoy-world.jpg';
 import star from '@/assets/jnoy-spark.jpg';
 
@@ -50,6 +51,17 @@ function Home() {
     ]).then(([p, pref, role, sessions]) => { if (!canceled) { setProfile(p.data); setPrefs(pref.data); setIsAdmin(!!role.data); if (sessions.data?.[0]) setActive(sessions.data[0]); } });
     return () => { canceled = true; };
   }, [user]);
+  useEffect(() => {
+    if (!user) return;
+    let visitId: string | null = null;
+    let gone = false;
+    recordActivity({ data: { visitId: null, end: false } }).then(result => {
+      if (gone) { void recordActivity({ data: { visitId: result.visitId, end: true } }); return; }
+      visitId = result.visitId;
+    }).catch(() => {});
+    const heartbeat = setInterval(() => { if (visitId && document.visibilityState === 'visible') void recordActivity({ data: { visitId, end: false } }); }, 60000);
+    return () => { gone = true; clearInterval(heartbeat); if (visitId) void recordActivity({ data: { visitId, end: true } }); };
+  }, [user?.id]);
   const refresh = async () => { if (!user) return; const [p, pref] = await Promise.all([supabase.from('profiles').select('*').eq('id', user.id).single(), supabase.from('user_preferences').select('*').eq('user_id', user.id).maybeSingle()]); setProfile(p.data); setPrefs(pref.data); };
   const go = (s: Section) => { if (!user) { setAuthOpen(true); return; } setSection(s); };
 
