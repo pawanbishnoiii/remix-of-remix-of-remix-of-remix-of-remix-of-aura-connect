@@ -828,6 +828,20 @@ export type Database = {
     }
     Functions: {
       accept_terms: { Args: never; Returns: undefined }
+      admin_all_chats: {
+        Args: { _before?: string; _limit?: number }
+        Returns: {
+          message_count: number
+          mode: string
+          session_id: string
+          started_at: string
+          status: string
+          user_a_id: string
+          user_a_name: string
+          user_b_id: string
+          user_b_name: string
+        }[]
+      }
       admin_list_users: {
         Args: { _q: string }
         Returns: {
