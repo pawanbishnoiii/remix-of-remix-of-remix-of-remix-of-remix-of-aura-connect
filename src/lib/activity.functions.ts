@@ -7,7 +7,7 @@ const activitySchema = z.object({ visitId: z.string().uuid().nullable(), end: z.
 
 export const recordActivity = createServerFn({ method: 'POST' })
   .middleware([requireSupabaseAuth])
-  .inputValidator(activitySchema)
+  .validator(activitySchema)
   .handler(async ({ data, context }) => {
     const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
     const request = getRequest();
