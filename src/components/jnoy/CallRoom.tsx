@@ -150,7 +150,7 @@ export function CallRoom({ session, user, onClose, onNext, notify }: { session: 
     <div className={`call-layout ${chatOpen ? '' : 'jn-chat-hidden'}`}>
       <div className="call-main">
         {session.mode === 'text' ? <div className="text-call-art"><img src={world} alt="" width={1280} height={1024}/><h2>Say hello to {name}.</h2><p>{countryFlag(partner?.country_code)} {countryLabel(partner?.country_code)}{partner?.tags?.length ? ` · ${partner.tags.slice(0, 3).join(' · ')}` : ''}</p></div>
-          : <VideoStage stream={remote} label={remote ? name : callState === 'disconnected' ? 'Connection lost — tap Next' : `Connecting to ${name}…`} remote offline={callState === 'disconnected'} audioOnly={session.mode === 'audio'} avatar={partner?.avatar_url}/>}
+          : <VideoStage stream={remote} label={remote ? name : callState === 'disconnected' ? 'Connection lost — tap Next' : `Connecting to ${name}…`} remote offline={callState === 'disconnected'} audioOnly={session.mode === 'audio'} avatar={partner?.avatar_url ?? null}/>}
         <div className="call-overlay-info"><span>{name}</span><small>{countryFlag(partner?.country_code)} {countryLabel(partner?.country_code)} · {session.mode} chat</small></div>
         {session.mode === 'video' && <div className="self-preview"><VideoStage stream={camOn ? local : null} label="You"/></div>}
         <div className="call-controls">

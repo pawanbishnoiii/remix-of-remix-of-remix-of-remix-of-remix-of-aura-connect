@@ -24,7 +24,7 @@ function SettingsPage() {
   const save = async () => {
     const { data: u } = await supabase.auth.getUser();
     for (const [key, value] of Object.entries(vals)) {
-      const { error } = await supabase.from('app_settings').upsert({ key, value, updated_by: u.user?.id, updated_at: new Date().toISOString() });
+      const { error } = await supabase.from('app_settings').upsert({ key, value, updated_by: u.user?.id ?? null, updated_at: new Date().toISOString() });
       if (error) { setMsg(error.message); return; }
     }
     setMsg('Settings saved. Matching uses them immediately.');

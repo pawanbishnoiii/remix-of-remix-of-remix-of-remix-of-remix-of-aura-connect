@@ -14,8 +14,8 @@ export function useProfileForm(user: User, profile: Profile | null, prefs: Prefs
   const [v, setV] = useState<OnboardingValues>({ first: '', last: '', gender: '', age: '', country: '', language: 'English', tags: [] });
   useEffect(() => {
     setV({
-      first: profile?.first_name || md.given_name || (md.full_name || md.name || '').split(' ')[0] || '',
-      last: profile?.last_name || md.family_name || (md.full_name || '').split(' ').slice(1).join(' ') || '',
+      first: profile?.first_name || md['given_name'] || (md['full_name'] || md['name'] || '').split(' ')[0] || '',
+      last: profile?.last_name || md['family_name'] || (md['full_name'] || '').split(' ').slice(1).join(' ') || '',
       gender: profile?.gender || '',
       age: profile?.age ? String(profile.age) : '',
       country: profile?.country_code || detectedCountry || '',
