@@ -90,7 +90,7 @@ export function Messages({ user, notify, onMeet }: { user: User; notify: (s: str
 
   const sel = connections.find(c => c.id === selected); const partner = sel ? names[other(sel)] : undefined;
   const list = connections.filter(c => !q.trim() || (names[other(c)]?.display_name || '').toLowerCase().includes(q.trim().toLowerCase()));
-  const Avatar = ({ p }: { p?: Mini }) => <span className="connection-avatar">{p?.avatar_url ? <img src={p.avatar_url} alt="" referrerPolicy="no-referrer"/> : p?.display_name?.[0] || <Heart size={18}/>}</span>;
+  const Avatar = ({ p }: { p?: Mini | undefined }) => <span className="connection-avatar">{p?.avatar_url ? <img src={p.avatar_url} alt="" referrerPolicy="no-referrer"/> : p?.display_name?.[0] || <Heart size={18}/>}</span>;
 
   return <div className="interior-page jn-dm"><div className="interior-header"><span className="section-kicker">KEEP THE CONVERSATION GOING</span><h1>The people you <em>clicked with.</em></h1><p>Only mutual connections appear here.</p></div>
     <div className={`messages-layout surface ${selected ? 'has-chat' : ''}`}>

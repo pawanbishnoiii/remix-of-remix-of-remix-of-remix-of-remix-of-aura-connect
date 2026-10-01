@@ -412,3 +412,39 @@ html,body{overflow-x:hidden}
   .jn-dm .messages-layout:not(.has-chat) .message-panel{display:none}
   .jn-dm-back{display:grid}
 }
+
+/* ---- Call recovery ---- */
+.jn-recover{position:absolute;left:50%;top:76px;transform:translateX(-50%);z-index:30;display:flex;align-items:center;gap:14px;flex-wrap:wrap;justify-content:center;max-width:min(92%,620px);padding:14px 18px;border-radius:20px;background:#fff7e8;color:#3b1d4a;box-shadow:0 18px 40px -12px rgba(30,10,45,.45);font-size:15px}
+.jn-recover.hard{background:#fff;border:2px solid #f0b4c4}
+.jn-recover b{display:block;font-size:16px}.jn-recover small{color:#6b5579;font-size:14px}
+.jn-recover-icon{width:42px;height:42px;border-radius:14px;display:grid;place-items:center;background:#f1e6ff;color:#7a3fd1;flex:none}
+.jn-recover-actions{display:flex;gap:8px}
+.jn-recover-actions button{display:inline-flex;align-items:center;gap:6px;min-height:42px;padding:0 14px;border-radius:12px;border:0;font-weight:600;background:#efe6fb;color:#4a2370;cursor:pointer}
+.jn-recover-actions .next{background:#8b5cf6;color:#fff}.jn-recover-actions .leave{background:#e8566f;color:#fff}
+.jn-spin{animation:jnspin 1s linear infinite}@keyframes jnspin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.jn-spin{animation:none}}
+.jn-privacy-sum{cursor:pointer;font-weight:700;font-size:18px;list-style:none;padding:4px 0}
+.jn-privacy-card:not([open]) .jn-deco{display:none}
+.jn-auth-note{font-size:13px;margin:10px 0 0}
+
+/* ---- Desktop: side-by-side you | partner | chat (video) ---- */
+@media (min-width:1024px){
+  .jn-call.jn-mode-video .call-main{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .jn-call.jn-mode-video .call-main>.self-preview{position:relative!important;inset:auto!important;width:auto!important;height:auto!important;grid-column:1;grid-row:1;border-radius:24px;overflow:hidden}
+  .jn-call.jn-mode-video .call-main>:first-child{grid-column:2;grid-row:1}
+  .jn-call.jn-mode-video .call-overlay-info{left:calc(50% + 22px)}
+}
+
+/* ---- Mobile call: brand visible, big view, chat lower ---- */
+@media (max-width:1023px){
+  .jn-call{min-height:100dvh;display:flex;flex-direction:column}
+  .jn-call .call-top{padding:10px 14px;position:relative;z-index:25}
+  .jn-call .call-top .call-status{font-size:13px}
+  .jn-call .call-layout{flex:1;display:flex;flex-direction:column;gap:10px;min-height:0}
+  .jn-call .call-main{flex:1 1 auto;min-height:58dvh}
+  .jn-call.jn-mode-text .call-main{min-height:34dvh}
+  .jn-call.jn-mode-text .text-call-art img{max-height:16dvh;width:auto}
+  .jn-call .call-chat{flex:0 0 auto;max-height:44dvh;margin-top:auto}
+  .jn-call.jn-mode-text .call-chat{flex:1 1 auto;max-height:none}
+  .jn-recover{top:12px;font-size:14px}
+}

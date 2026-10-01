@@ -45,11 +45,11 @@ export function ProfilePage({ user, profile, prefs, detectedCountry, refresh, no
         {justSaved && <button className="full-primary jn-start-after" onClick={onStart}>Saved — start matching now <ArrowRight size={17}/></button>}
         <button className="subtle-action" onClick={signOut}><LogOut size={14}/> Sign out</button>
       </div>
-      <div className="surface edit-card jn-privacy-card"><img src={frame} alt="" width={120} height={120} loading="lazy" className="jn-deco"/><h2>Privacy &amp; your data</h2>
+      <details className="surface edit-card jn-privacy-card" open={!profile?.onboarding_completed}><summary className="jn-privacy-sum">Privacy &amp; your data</summary><img src={frame} alt="" width={120} height={120} loading="lazy" className="jn-deco"/>
         <h3 className="jn-sub">Consent history</h3>
         {consents.length ? <ul className="jn-consents">{consents.map(c => <li key={c.policy_type + c.policy_version}><span>{LABEL[c.policy_type] || c.policy_type} <small>v{c.policy_version}</small></span><time>{new Date(c.accepted_at).toLocaleDateString()}</time></li>)}</ul> : <p className="jn-muted">No consent recorded yet.</p>}
         <div className="jn-row"><button className="preview-activate" onClick={doExport}><Download size={15}/> Download my data</button><button className="preview-activate jn-danger" onClick={doDelete}><Trash2 size={15}/> Delete account</button></div>
-      </div></div>
+      </details></div>
     </div>
   </div>;
 }

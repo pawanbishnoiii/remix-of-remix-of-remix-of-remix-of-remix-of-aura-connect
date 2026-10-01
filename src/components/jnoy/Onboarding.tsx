@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import type { User } from '@supabase/supabase-js';
 import { motion } from 'motion/react';
-import { ArrowRight, Globe2, ShieldCheck } from 'lucide-react';
+import { ArrowRight, Check, Globe2, ShieldCheck } from 'lucide-react';
+import { Link } from '@tanstack/react-router';
 import { supabase } from '@/integrations/supabase/client';
 import { COUNTRIES, LANGUAGES, countryFlag, countryLabel, onboardingSchema, type Prefs, type Profile } from '@/lib/jnoy';
 import { TagPicker } from './TagPicker';
@@ -63,7 +64,10 @@ export function ProfileFields({ v, set, detectedCountry }: { v: OnboardingValues
 export function Onboarding({ user, profile, prefs, detectedCountry, onDone, onSkip, notify }: { user: User; profile: Profile | null; prefs: Prefs | null; detectedCountry: string | null; onDone: () => void; onSkip: () => void; notify: (s: string) => void }) {
   const [v, setV] = useProfileForm(user, profile, prefs, detectedCountry);
   const [busy, setBusy] = useState(false);
-  const complete = !!(v.first.trim() && v.last.trim() && v.gender && Number(v.age) >= 18 && v.country && v.language);
+  const [adult, setAdult] = useState(false); const [terms, setTerms] = useState(false); const [privacy, setPrivacy] = useState(false);
+  const consent = adult && terms && privacy;
+  const C = ({ on, set, children }: { on: boolean; set: (b: boolean) => void; children: React.ReactNode }) => <label className={`jn-check ${on ? 'on' : ''}`}><input type="checkbox" checked={on} onChange={e => set(e.target.checked)}/><span className="jn-box">{on && <Check size={13}/>}</span><span>{children}</span></label>;
+  const complete = consent && !!(v.first.trim() && v.last.trim() && v.gender && Number(v.age) >= 18 && v.country && v.language);
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setBusy(true);
@@ -79,6 +83,14 @@ export function Onboarding({ user, profile, prefs, detectedCountry, onDone, onSk
         <div><span className="section-kicker">ONE QUICK STEP</span><h1>Tell us a little <em>about you.</em></h1><p>Everything marked * is required. You only do this once.</p></div>
       </div>
       <ProfileFields v={v} set={setV} detectedCountry={detectedCountry}/>
+      <div className="jn-consent">
+        <C on={consent} set={b => { setAdult(b); setTerms(b); setPrivacy(b); }}><b>Agree to all</b></C>
+        <div className="jn-consent-list">
+          <C on={adult} set={setAdult}>I am 18 years or older</C>
+          <C on={terms} set={setTerms}>I agree to the <Link to="/terms" target="_blank">Terms of Service</Link> and <Link to="/guidelines" target="_blank">Community Guidelines</Link></C>
+          <C on={privacy} set={setPrivacy}>I agree to the <Link to="/privacy" target="_blank">Privacy Policy</Link>, incl. approximate location and camera/mic use for matching and safety</C>
+        </div>
+      </div>
       <button className="full-primary" disabled={busy || !complete}>{busy ? 'Saving…' : 'Finish & start meeting people'} <ArrowRight size={18}/></button>
       <button type="button" className="subtle-action jn-center" onClick={onSkip}>Skip for now — I’ll finish later</button>
       <p className="jn-muted jn-center"><ShieldCheck size={14}/> Your last name is never shown to matches.</p>
