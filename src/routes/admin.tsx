@@ -1,6 +1,6 @@
 import { createFileRoute, Link, Outlet } from '@tanstack/react-router';
 import { useEffect, useState } from 'react';
-import { Activity, ArrowLeft, Flag, LayoutDashboard, Settings, Users } from 'lucide-react';
+import { Activity, ArrowLeft, Bot, Flag, LayoutDashboard, Settings, Users } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Brand } from '@/components/jnoy/Brand';
 
@@ -24,6 +24,7 @@ function AdminLayout() {
     { to: '/admin', label: 'Dashboard', icon: LayoutDashboard, exact: true },
     { to: '/admin/users', label: 'Users', icon: Users },
     { to: '/admin/reports', label: 'Reports', icon: Flag },
+    { to: '/admin/bots', label: 'Companions', icon: Bot },
     { to: '/admin/activity', label: 'Activity', icon: Activity },
     { to: '/admin/settings', label: 'Settings', icon: Settings },
   ] as const;

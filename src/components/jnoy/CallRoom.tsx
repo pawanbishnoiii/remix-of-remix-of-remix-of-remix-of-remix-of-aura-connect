@@ -7,6 +7,7 @@ import { VideoStage } from './VideoStage';
 import { ReportDialog } from './ReportDialog';
 import { Brand } from './Brand';
 import { countryFlag, countryLabel, messageSchema, type Msg, type Profile, type Session } from '@/lib/jnoy';
+import { botTick } from '@/lib/bot.functions';
 import world from '@/assets/jnoy-world.jpg';
 
 type CallState = 'connecting' | 'connected' | 'reconnecting' | 'disconnected' | 'left';
@@ -45,6 +46,15 @@ export function CallRoom({ session, user, onClose, onNext, notify, autoNext }: {
   const chatEnd = useRef<HTMLDivElement>(null);
   const leaving = useRef(false);
   const restartRef = useRef<() => void>(() => {});
+  const lastBotTick = useRef(0);
+  // Keeps a bot companion conversational: the server replies to messages and
+  // moves the companion on after a while. No-op for real human partners.
+  const tickBot = async () => {
+    const now = Date.now();
+    if (now - lastBotTick.current < 3000) return;
+    lastBotTick.current = now;
+    try { await botTick({ data: { sessionId: session.id } }); } catch { /* companions are optional */ }
+  };
   const [peerAway, setPeerAway] = useState(false);
   const [offline, setOffline] = useState(false);
   useEffect(() => {
@@ -85,7 +95,7 @@ export function CallRoom({ session, user, onClose, onNext, notify, autoNext }: {
       })
       .subscribe(status => { if (status === 'SUBSCRIBED') { void load(); void channel.track({ userId: user.id }); } });
     roomChannel.current = channel;
-    const chatTimer = setInterval(() => { if (document.visibilityState === 'visible') void load(); }, 3000);
+    const chatTimer = setInterval(() => { if (document.visibilityState === 'visible') { void load(); void tickBot(); } }, 3000);
     const onVisible = () => { if (document.visibilityState === 'visible') void load(); };
     document.addEventListener('visibilitychange', onVisible);
     let timer: ReturnType<typeof setInterval> | undefined; let qualityTimer: ReturnType<typeof setInterval> | undefined; let connTimer: ReturnType<typeof setTimeout> | undefined;
@@ -172,7 +182,7 @@ export function CallRoom({ session, user, onClose, onNext, notify, autoNext }: {
     if (!parsed.success) { notify(parsed.error.issues[0]?.message || 'Invalid message'); return; }
     setDraft('');
     const { data, error } = await supabase.from('session_messages').insert({ session_id: session.id, sender_id: user.id, body: parsed.data }).select('*').single();
-    if (error) { notify(error.message); setDraft(parsed.data); } else if (data) setMessages(m => m.some(x => x.id === data.id) ? m : [...m, data]);
+    if (error) { notify(error.message); setDraft(parsed.data); } else if (data) { setMessages(m => m.some(x => x.id === data.id) ? m : [...m, data]); void tickBot(); }
   };
   const updateDraft = (value: string) => {
     setDraft(value);

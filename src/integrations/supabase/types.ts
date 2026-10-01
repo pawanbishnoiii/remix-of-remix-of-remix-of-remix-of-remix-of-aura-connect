@@ -35,6 +35,57 @@ export type Database = {
         }
         Relationships: []
       }
+      bots: {
+        Row: {
+          age: number
+          avatar_url: string | null
+          bio: string | null
+          city: string | null
+          country_code: string
+          created_at: string
+          district: string | null
+          gender: string
+          id: string
+          is_active: boolean
+          name: string
+          region: string | null
+          tags: string[]
+          user_id: string | null
+        }
+        Insert: {
+          age?: number
+          avatar_url?: string | null
+          bio?: string | null
+          city?: string | null
+          country_code?: string
+          created_at?: string
+          district?: string | null
+          gender?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          region?: string | null
+          tags?: string[]
+          user_id?: string | null
+        }
+        Update: {
+          age?: number
+          avatar_url?: string | null
+          bio?: string | null
+          city?: string | null
+          country_code?: string
+          created_at?: string
+          district?: string | null
+          gender?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          region?: string | null
+          tags?: string[]
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       call_signals: {
         Row: {
           created_at: string
@@ -928,6 +979,10 @@ export type Database = {
         }[]
       }
       block_user: { Args: { _target: string }; Returns: undefined }
+      bot_end_session: {
+        Args: { _reason: string; _session: string }
+        Returns: undefined
+      }
       complete_onboarding: {
         Args: {
           _age: number

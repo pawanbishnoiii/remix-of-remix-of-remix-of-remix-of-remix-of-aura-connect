@@ -10,6 +10,8 @@ const FIELDS: Field[] = [
   { key: 'matching', field: 'broaden_after_seconds', label: 'Widen to the whole world after (seconds)', type: 'number' },
   { key: 'matching', field: 'repeat_cooldown_seconds', label: 'Don’t re-match the same pair within (seconds)', type: 'number' },
   { key: 'matching', field: 'same_device_only', label: 'Match phones with phones, computers with computers', type: 'bool' },
+  { key: 'matching', field: 'bot_after_seconds', label: 'Offer a bot companion in text chat after waiting (seconds)', type: 'number' },
+  { key: 'matching', field: 'bot_chance', label: 'Chance a bot companion is offered, 0-1 (text chat)', type: 'number' },
   { key: 'safety', field: 'block_contact_sharing', label: 'Block phone numbers & contact details in chat', type: 'bool' },
   { key: 'safety', field: 'report_screenshots', label: 'Save a video snapshot when someone reports', type: 'bool' },
   { key: 'matching', field: 'queue_timeout_seconds', label: 'Drop idle searchers from the queue after (seconds)', type: 'number' },
