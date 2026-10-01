@@ -9,3 +9,16 @@
 - [x] Filters: India default, countries behind a button, tags instead of "How you talk", no widen switch.
 - [x] Faster matching, nearby (district/city/state) priority, ~1/30 repeat chance after Next.
 - [x] Messages: first-message chime, seen, timestamps, search, phone back button.
+
+## New request (2026-10-01 02:42 UTC)
+- [ ] Bots: 15 realistic bot profiles (photo, name, interests) that occasionally join matching; admin can manage bots
+- [ ] Compatibility ranking: use member interests/tags/preferred regions with a model to rank candidates
+- [ ] Call recovery: detect weak/lost connections, lower video quality, clear Reconnect/Leave options; notify when partner exits (video + text)
+- [ ] Mobile call screen: chat box a bit lower, branding visible, larger video view; desktop polish; mobile page upgrade
+- [ ] Auth: user must click a login button to log in; duplicate signup with same email logs the user in; auth page upgrade
+- [ ] Onboarding: permissions/camera-mic asked in onboarding, not at signup
+- [ ] Profile: separate profile page file; after info set once, "Privacy & your data" section hidden
+- [ ] Admin dashboard upgrade
+- [ ] Matching bug: 2+ users waiting sometimes never match — investigate if related to reports, fix
+- [ ] Location: fully working live location detection without GPS (currently wrong locations hurt nearby matching)
+- [ ] Match flow per images: if no match with the 5 profile images, auto-Next; fix security warnings
